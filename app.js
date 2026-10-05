@@ -1928,7 +1928,16 @@ function applyRemoteData(data, isSilent = false) {
     state.lastSyncTime = data.updatedAt || Date.now();
     updateLastUpdatedDisplay(state.lastSyncTime);
 
-    render();
+    // 共有データで状態が変わった場合は、遅延描画キャッシュを破棄して
+    // 献立・買い物・レシピを必ず最新の共有内容で再描画する。
+    if (changed) {
+      state.renderedTabs.weekly = false;
+      state.renderedTabs.shopping = false;
+      state.renderedTabs.recipes = false;
+      render(true);
+    } else {
+      render();
+    }
     if (changed && !isSilent) {
       showToast('家族の最新データ（献立・目標予算）を同期しました！');
     }

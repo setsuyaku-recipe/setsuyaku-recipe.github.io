@@ -656,7 +656,7 @@
     <div class="home-header-inner">
       <div class="home-brand">
         <div class="home-brand-mark overflow-hidden p-0 border border-amber-200 shadow-xs">
-          <img src="icons/icon-192.png" alt="週ぎめごはん" class="w-full h-full object-cover rounded-xl">
+          <img src="icons/icon-192.png" alt="週ぎめごはん" width="40" height="40" style="width:100%;height:100%;object-fit:cover;display:block;max-width:100%;" class="w-full h-full object-cover rounded-xl">
         </div>
         <div>
           <h1>週ぎめごはん</h1>
@@ -677,7 +677,10 @@
         <button id="btn-open-guide" onclick="openGuideModal()" class="home-icon-btn home-icon-btn-muted" title="使い方">
           <span>？</span>
         </button>
-        <button id="btn-install-pwa" class="hidden"></button>
+        <button id="btn-install-pwa" type="button" class="hidden home-icon-btn" title="ホーム画面に追加してアプリとして使う" aria-label="スマホで使用">
+          <span aria-hidden="true">📲</span>
+          <span>スマホで使用</span>
+        </button>
         <button id="btn-open-mobile-modal" class="hidden"></button>
       </div>
     </div>
@@ -1551,14 +1554,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261002_shukime_v9"></script>
-  <script src="app.js?v=20261002_shukime_v9"></script>
+  <script src="recipes.js?v=20261005_stability_fix"></script>
+  <script src="app.js?v=20261005_stability_fix"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261002_shukime_v9', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261005_stability_fix', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

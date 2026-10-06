@@ -72,10 +72,14 @@ const STORAGE_KEY_WEEKLY_VIEW_MODE = 'frugal_weekly_view_mode_v1';
 const STORAGE_KEY_RECIPE_VIEW_MODE = 'frugal_recipe_view_mode_v1';
 
 // 安全なアイコン描画ヘルパー
+let iconRenderPending = false;
 function safeCreateIcons() {
   if (typeof lucide === 'undefined' || !lucide || typeof lucide.createIcons !== 'function') return;
+  if (iconRenderPending) return;
+  iconRenderPending = true;
 
   const run = () => {
+    iconRenderPending = false;
     try {
       lucide.createIcons({ attrs: { 'stroke-width': 2 } });
     } catch (e) {
@@ -1024,9 +1028,12 @@ function setupEventListeners() {
 
   const searchInput = document.getElementById('recipe-search-input');
   if (searchInput) {
+    let searchTimer;
     searchInput.addEventListener('input', (e) => {
       state.searchQuery = e.target.value.trim().toLowerCase();
-      renderRecipeBook();
+      state.recipeRenderLimit = 24;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(renderRecipeBook, 150);
     });
   }
 
@@ -3677,11 +3684,14 @@ function getRecipeCardImage(recipe) {
 function getRecipeFallbackEmoji(recipe) {
   if (recipe.category === 'soup') return '🥣';
   if (recipe.category === 'side') return '🥗';
-  if (recipe.proteinType === 'fish') return '🐟';
-  if (recipe.proteinType === 'chicken') return '🍗';
-  if (recipe.proteinType === 'pork') return '🥩';
-  if (recipe.proteinType === 'mince') return '🍳';
-  return '🍽️';
+  return getProteinInfo(recipe)?.icon || '🍽️';
+}
+
+function getRecipeVisual(recipe) {
+  const tone = recipe.category === 'soup' ? 'soup' : recipe.category === 'side' ? 'side' :
+    ['fish', 'shrimp'].includes(recipe.proteinType) ? 'seafood' :
+    recipe.proteinType === 'soy' ? 'side' : 'main';
+  return `<div class="recipe-card-fallback recipe-visual-${tone}" aria-hidden="true"><span class="recipe-visual-plate"><span>${getRecipeFallbackEmoji(recipe)}</span></span></div>`;
 }
 
 function syncRecipeLibraryControls() {
@@ -3707,6 +3717,11 @@ window.showMoreRecipes = function() {
 };
 
 function renderRecipeBook() {
+  // Hidden panels are refreshed when opened, rather than rebuilt on every change.
+  if (state.activeTab !== 'recipes') {
+    state.renderedTabs.recipes = false;
+    return;
+  }
   const container = document.getElementById('recipe-book-container');
   if (!container) return;
 
@@ -3810,7 +3825,7 @@ function renderRecipeBook() {
       const categoryLabel = categoryLabels[recipe.category] || 'レシピ';
       const imageHtml = imagePath
         ? `<img src="${imagePath}" alt="${cleanTitle}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;recipe-card-fallback&quot;>${getRecipeFallbackEmoji(recipe)}</div>'">`
-        : `<div class="recipe-card-fallback"><div class="flex flex-col items-center gap-1"><span>${getRecipeFallbackEmoji(recipe)}</span><span class="text-[10px] font-black text-[#8b8178]">写真準備中</span></div></div>`;
+        : getRecipeVisual(recipe);
 
       return `
         <article class="recipe-card-refresh ${isBlacklisted ? 'opacity-70' : ''}" onclick="openDetailModal('${recipe.id}')">

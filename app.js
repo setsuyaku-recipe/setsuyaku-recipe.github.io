@@ -2749,7 +2749,7 @@ function renderWeeklyPlan() {
           </div>
 
           <!-- 主菜食材バナー（肉・魚・豆腐が一目でわかる！） -->
-          ${proteinBannerHtml}
+          
 
           <!-- 3品一覧エリア（スマホでスクロール不要で1画面に収まるスリムレイアウト） -->
           <div class="p-2 sm:p-2.5 flex-1 flex flex-col gap-1.5 ${isCooked ? 'bg-emerald-50/20' : ''}">
@@ -2892,8 +2892,9 @@ function renderDishRow(dayId, category, recipe, label) {
   }
 
   return `
-    <div class="flex flex-col p-2 sm:p-2.5 rounded-xl border ${cardBorder} transition-all group shadow-2xs w-full min-w-0 overflow-hidden">
+    <div class="weekly-dish weekly-dish-${category} flex flex-col p-2 sm:p-2.5 rounded-xl border ${cardBorder} transition-all group shadow-2xs w-full min-w-0 overflow-hidden">
       <div class="flex items-start justify-between gap-1.5 sm:gap-2 w-full min-w-0">
+        ${category === 'main' ? `<div class="weekly-main-visual" onclick="openDetailModal(\'${recipe.id}\')">${getRecipeVisual(recipe)}</div>` : ''}
         <!-- 料理名・バッジ・価格（クリックで作り方モーダル） -->
         <div class="flex-1 min-w-0 cursor-pointer overflow-hidden" onclick="openDetailModal('${recipe.id}')">
           <!-- 上段バッジ ＆ 価格 -->

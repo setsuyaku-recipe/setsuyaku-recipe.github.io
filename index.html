@@ -689,6 +689,8 @@
       .weekly-main-visual { flex-basis:60px;width:60px;height:60px; }
     }
 
+    .home-child-dislikes-btn { background:#fff0ec;border-color:#e2b7ad;color:#70413a;white-space:nowrap; }
+    .home-child-dislikes-btn:focus-visible { outline:3px solid #0B6F66;outline-offset:2px; }
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -715,9 +717,9 @@
           <span class="hidden sm:inline">共有</span>
           <span id="sync-status-dot" class="inline-block w-2 h-2 rounded-full bg-slate-300"></span>
         </button>
-        <button id="btn-open-preferences" onclick="openPreferencesModal(false)" class="home-icon-btn" title="家族・好み設定">
-          <span>⚙️</span>
-          <span class="hidden sm:inline">設定</span>
+        <button id="btn-open-preferences" type="button" onclick="openPreferencesModal(false)" class="home-icon-btn home-child-dislikes-btn" title="子どもの苦手な食材・味を設定" aria-label="子どもの苦手な食材・味を設定">
+          <span aria-hidden="true">👶</span>
+          <span>子の苦手</span>
         </button>
         <button id="btn-open-guide" onclick="openGuideModal()" class="home-icon-btn home-icon-btn-muted" title="使い方">
           <span>？</span>
@@ -1600,14 +1602,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261006_meal_first_screen"></script>
-  <script src="app.js?v=20261006_meal_first_screen"></script>
+  <script src="recipes.js?v=20261006_child_dislikes_entry"></script>
+  <script src="app.js?v=20261006_child_dislikes_entry"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261006_meal_first_screen', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261006_child_dislikes_entry', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

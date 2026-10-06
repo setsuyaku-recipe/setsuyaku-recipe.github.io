@@ -96,6 +96,11 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
+    /* Keep install control hidden before CDN styles and app initialization. */
+    #btn-install-pwa.hidden { display: none !important; }
+    @media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+      #btn-install-pwa { display: none !important; }
+    }
     body {
       font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif;
       background: linear-gradient(135deg, #f0f7ff 0%, #f4fbf4 50%, #f0faf9 100%);

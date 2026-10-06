@@ -663,6 +663,32 @@
     #btn-swipe-next,#btn-recipe-swipe-next {grid-column:3}
     #weekly-swipe-slider,#recipe-swipe-slider {grid-row:2;grid-column:1 / -1;min-width:0;width:100%}
     @media print {.budget-overview,.compact-settings {display:none}}
+
+    .weekly-main-visual { flex:0 0 68px;width:68px;height:68px;cursor:pointer;border-radius:14px;overflow:hidden; }
+    .weekly-main-visual .recipe-visual-plate { width:54px;height:54px;border-width:4px; }
+    .weekly-main-visual .recipe-visual-plate span { font-size:30px; }
+    @media (max-width:639px) {
+      #panel-meal { display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px;align-items:center; }
+      #panel-meal[hidden] { display:none; }
+      #weekly-plan-container { grid-column:1 / -1; }
+      .weekly-focus-head,.weekly-subtools { margin:0 !important;padding:0 !important; }
+      .weekly-focus-head > div { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+      .weekly-subtools { justify-content:flex-end;gap:4px; }
+      .weekly-primary-btn { padding:0 8px !important;min-height:44px !important; }
+      .weekly-view-switch button { padding:0 7px !important;min-height:44px !important;font-size:11px !important; }
+      .weekly-print-btn { min-width:44px !important;padding:0 6px !important; }
+      .weekly-print-btn span:last-child { display:none; }
+      .budget-overview { padding:6px 10px;margin-bottom:4px; }
+      #budget-balance { font-size:1rem; }
+      #budget-estimate { margin:0 0 4px; }
+      .compact-settings { margin-top:8px; }
+      #weekly-plan-container div:has(> #btn-swipe-prev) { display:block; }
+      #btn-swipe-prev,#btn-swipe-next { display:none; }
+      .weekly-dish { padding:7px !important; }
+      .weekly-dish-main { min-height:84px; }
+      .weekly-main-visual { flex-basis:60px;width:60px;height:60px; }
+    }
+
   </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -712,10 +738,7 @@
     <p id="budget-estimate">献立の予定額を計算中</p>
     <div id="budget-meter" role="meter" aria-label="献立の予定額の予算使用率" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="budget-meter-fill"></span></div>
   </section>
-  <details class="compact-settings">
-    <summary><span class="compact-settings-copy"><span id="core-budget-display">¥4,500 / 週</span><span id="core-servings-display">3人分</span><span id="core-dislike-display">子ども1人・未設定</span></span><span class="compact-settings-change">変更</span></summary>
-    <div class="compact-settings-actions"><button type="button" onclick="openCoreBudgetPanel()">週間予算</button><button type="button" onclick="openPreferencesModal(false)">人数・苦手食材</button></div>
-  </details>
+
 
   <!-- 予算クイックパネル -->
   <div id="core-budget-panel" class="core-budget-panel hidden">
@@ -1054,6 +1077,10 @@
     </section>
 
   </main>
+  <details class="compact-settings">
+    <summary><span class="compact-settings-copy"><span id="core-budget-display">¥4,500 / 週</span><span id="core-servings-display">3人分</span><span id="core-dislike-display">子ども1人・未設定</span></span><span class="compact-settings-change">変更</span></summary>
+    <div class="compact-settings-actions"><button type="button" onclick="openCoreBudgetPanel()">週間予算</button><button type="button" onclick="openPreferencesModal(false)">人数・苦手食材</button></div>
+  </details>
 
   <!-- ==================== フッター ==================== -->
   <footer class="bg-white border-t border-slate-200/80 mt-12 py-8 text-center text-xs text-slate-400">
@@ -1573,14 +1600,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261006_recipe_visual_light"></script>
-  <script src="app.js?v=20261006_recipe_visual_light"></script>
+  <script src="recipes.js?v=20261006_meal_first_screen"></script>
+  <script src="app.js?v=20261006_meal_first_screen"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261006_recipe_visual_light', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261006_meal_first_screen', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

@@ -154,6 +154,17 @@ function getExternalBadge(recipe) {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     loadSavedState();
+    state.lastSyncTime = Number(localStorage.getItem('frugal_sync_time_' + state.familySyncCode)) || 0;
+    const sharedSnapshot = state.pendingShareData;
+    if (sharedSnapshot) {
+      applyRemoteData({ weeklyPlan: sharedSnapshot.w, servings: sharedSnapshot.s, targetBudget: sharedSnapshot.b,
+        childrenCount: sharedSnapshot.k, childrenPreferences: sharedSnapshot.p, checkedItems: sharedSnapshot.ck,
+        shoppingDays: sharedSnapshot.sd, customShoppingItems: sharedSnapshot.cs,
+        customRecipes: sharedSnapshot.cr, updatedAt: sharedSnapshot.t }, true);
+      delete state.pendingShareData;
+      delete state.isJoiningFromUrl;
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     updateFavBadge();
     updateNgBadge();
     safeCreateIcons();
@@ -172,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateSyncStatusUI('disconnected');
       }
       delete state.isJoiningFromUrl;
-    } else if (state.familySyncCode) {
+    } else if (state.familySyncCode && !sharedSnapshot) {
       // すでに参加済みの端末の場合（復帰時）
       updateSyncStatusUI('connected');
       fetchAndApplySync(true);
@@ -259,36 +270,9 @@ function loadSavedState() {
   const urlSyncId = urlParams.get('sid') || '';
   const urlData = urlParams.get('d') || '';
 
-  // URLに圧縮データが含まれている場合は即座に完全復元（外部サーバー通信0秒で相手の献立・予算を100%確実に反映）
   if (urlData) {
     const decoded = decodeSharePayload(urlData);
-    if (decoded) {
-      if (decoded.w && typeof decoded.w === 'object') {
-        state.weeklyPlan = decoded.w;
-        localStorage.setItem(STORAGE_KEY_PLAN, JSON.stringify(state.weeklyPlan));
-      }
-      if (decoded.b) {
-        state.targetBudget = Number(decoded.b) || state.targetBudget;
-        localStorage.setItem(STORAGE_KEY_BUDGET, state.targetBudget.toString());
-      }
-      if (decoded.s) {
-        state.servings = Number(decoded.s) || state.servings;
-        localStorage.setItem(STORAGE_KEY_SERVINGS, state.servings.toString());
-      }
-      if (decoded.k !== undefined) {
-        state.childrenCount = Number(decoded.k) || 0;
-        localStorage.setItem(STORAGE_KEY_CHILDREN_COUNT, state.childrenCount.toString());
-      }
-      if (decoded.p) {
-        state.childrenPreferences = decoded.p;
-        localStorage.setItem(STORAGE_KEY_CHILDREN_PREF, JSON.stringify(state.childrenPreferences));
-      }
-      if (decoded.ck) {
-        state.checkedItems = decoded.ck;
-        localStorage.setItem(STORAGE_KEY_CHECKED, JSON.stringify(state.checkedItems));
-      }
-      state.lastSyncTime = Date.now();
-    }
+    if (decoded && decoded.w) state.pendingShareData = decoded;
   }
 
   if (urlSyncId) {
@@ -1750,9 +1734,31 @@ function normalizeFamilyCode(code) {
 }
 
 // 共有URLの生成（URLが約70文字と極短いため、QRコードのドットが大きく粗く、スマホカメラで一瞬で読み取れる）
+function encodeSharePayload(payload) {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeSharePayload(encoded) {
+  try {
+    const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(base64);
+    const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(binary, c => c.charCodeAt(0))));
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    if (!data || !days.every(day => data.w?.[day] && ['main', 'side', 'soup'].every(cat => typeof data.w[day][cat] === 'string'))) return null;
+    return data;
+  } catch (_) { return null; }
+}
+
 function getFamilyShareUrl(code) {
   const base = 'https://setsuyaku-recipe.github.io/';
-  return `${base}?family=${encodeURIComponent(normalizeFamilyCode(code))}`;
+  const snapshot = { w: state.weeklyPlan, s: state.servings, b: state.targetBudget,
+    k: state.childrenCount, p: state.childrenPreferences, ck: state.checkedItems,
+    sd: state.shoppingDays, cs: state.customShoppingItems, cr: state.customRecipes, t: Date.now() };
+  const encoded = encodeSharePayload(snapshot);
+  return `${base}?family=${encodeURIComponent(normalizeFamilyCode(code))}&d=${encoded}`;
 }
 
 // 最終更新時刻の文字列生成
@@ -1783,6 +1789,7 @@ function getSyncPayload() {
     servings: state.servings,
     targetBudget: state.targetBudget,
     weeklyPlan: state.weeklyPlan,
+    customRecipes: state.customRecipes,
     checkedItems: state.checkedItems,
     childrenCount: state.childrenCount,
     childrenPreferences: state.childrenPreferences,
@@ -1796,7 +1803,7 @@ async function fetchSyncData(code) {
   const cleanCode = normalizeFamilyCode(code);
   if (!cleanCode) return null;
   try {
-    const res = await fetch(`${SYNC_API_BASE}/${cleanCode}`);
+    const res = await fetch(`${SYNC_API_BASE}/${cleanCode}`, { cache: 'no-store' });
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
@@ -1858,7 +1865,20 @@ function pushSyncDataDebounced() {
 // リモートデータの適用
 function applyRemoteData(data, isSilent = false) {
   if (!data) return;
+  if (data.updatedAt && state.lastSyncTime && data.updatedAt < state.lastSyncTime) return;
   let changed = false;
+
+  if (Array.isArray(data.customRecipes)) {
+    for (const recipe of data.customRecipes) {
+      if (!recipe || typeof recipe.id !== 'string' || !recipe.title) continue;
+      if (!RECIPES_DATA.some(r => r.id === recipe.id)) {
+        RECIPES_DATA.push(recipe);
+        state.customRecipes.push(recipe);
+        changed = true;
+      }
+    }
+    localStorage.setItem(STORAGE_KEY_CUSTOM_RECIPES, JSON.stringify(state.customRecipes));
+  }
 
   if (data.weeklyPlan && JSON.stringify(data.weeklyPlan) !== JSON.stringify(state.weeklyPlan)) {
     state.weeklyPlan = data.weeklyPlan;
@@ -1933,6 +1953,7 @@ function applyRemoteData(data, isSilent = false) {
     }
 
     state.lastSyncTime = data.updatedAt || Date.now();
+    if (state.familySyncCode) localStorage.setItem('frugal_sync_time_' + state.familySyncCode, String(state.lastSyncTime));
     updateLastUpdatedDisplay(state.lastSyncTime);
 
     // 共有データで状態が変わった場合は、遅延描画キャッシュを破棄して
@@ -2155,10 +2176,10 @@ window.startFamilySharing = async function() {
   const newCode = await generateUniqueFamilyCode();
   state.familySyncCode = newCode;
   localStorage.setItem(STORAGE_KEY_SYNC_CODE, newCode);
-  await pushSyncData(newCode);
-  updateSyncStatusUI('connected');
+  const saved = await pushSyncData(newCode);
+  updateSyncStatusUI(saved ? 'connected' : 'disconnected');
   renderSyncModalContent();
-  showToast(`家族共有コード【${newCode}】を発行しました！`);
+  showToast(saved ? `家族共有コード【${newCode}】を発行しました！` : 'サーバー保存に失敗しました。共有リンクから現在の献立を渡せます');
 };
 
 // 手入力による参加（未共有画面）
@@ -2195,6 +2216,7 @@ async function joinFamilyByCode(code, showFeedback = true) {
 
   if (remoteData && remoteData.weeklyPlan) {
     state.familySyncCode = cleanCode;
+    state.lastSyncTime = Number(localStorage.getItem('frugal_sync_time_' + cleanCode)) || 0;
     localStorage.setItem(STORAGE_KEY_SYNC_CODE, cleanCode);
     applyRemoteData(remoteData, !showFeedback);
     updateSyncStatusUI('connected');
@@ -2239,7 +2261,7 @@ window.regenerateFamilySyncCode = async function() {
   await pushSyncData(newCode);
   updateSyncStatusUI('connected');
   renderSyncModalContent();
-  showToast(`新しいコード【${newCode}】を発行しました！`);
+  showToast(saved ? `新しいコード【${newCode}】を発行しました！` : 'サーバー保存に失敗しました。共有リンクから現在の献立を渡せます');
 };
 
 // ブラウザ復帰時＆フォーカス時の最新データ自動取得（C案）

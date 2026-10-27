@@ -1760,6 +1760,29 @@ function getFamilyShareUrl(code) {
   return `${base}?family=${encodeURIComponent(normalizeFamilyCode(code))}&d=${encoded}`;
 }
 
+// QR contains only the short join URL; snapshot links remain a fallback.
+function getFamilyJoinUrl(code) {
+  return 'https://setsuyaku-recipe.github.io/?family=' + encodeURIComponent(normalizeFamilyCode(code));
+}
+function getFamilyQrImageUrl(code) {
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=600x600&qzone=4&ecc=M&format=png&data=' + encodeURIComponent(getFamilyJoinUrl(code));
+}
+let familyQrRequest = 0;
+window.prepareFamilyQr = async function() {
+  const request = ++familyQrRequest;
+  const code = state.familySyncCode;
+  const host = document.getElementById('family-qr-host');
+  if (!host || !code) return;
+  host.innerHTML = '<p role="status">献立を保存してQRコードを準備しています…</p>';
+  const saved = await pushSyncData(code);
+  if (request !== familyQrRequest || state.familySyncCode !== code || document.getElementById('family-qr-host') !== host) return;
+  if (!saved) {
+    host.innerHTML = '<p role="status">共有用の保存ができませんでした。通信を確認して再試行するか、下の「共有リンク」を送ってください。</p><button type="button" onclick="prepareFamilyQr()">QRを再準備</button>';
+    return;
+  }
+  host.innerHTML = `<img src="${getFamilyQrImageUrl(code)}" alt="家族共有に参加するQRコード" width="600" height="600" class="family-join-qr" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><p hidden role="status">QR画像を読み込めませんでした。共有コードの入力、または共有リンクをご利用ください。</p>`;
+};
+
 // 最終更新時刻の文字列生成
 function formatLastUpdatedTime(timestamp) {
   if (!timestamp) return '';
@@ -2041,8 +2064,7 @@ function renderSyncModalContent() {
 
   if (state.familySyncCode) {
     // ===== 共有中 =====
-    const shareUrl = getFamilyShareUrl(state.familySyncCode);
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(shareUrl)}`;
+
 
     container.innerHTML = `
       <!-- 共有コード表示カード -->
@@ -2061,11 +2083,8 @@ function renderSyncModalContent() {
       <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center">
         <h4 class="font-bold text-slate-800 text-xs mb-1">📷 相手のスマホカメラで読み取るだけ！</h4>
         <p class="text-[11px] text-slate-500 mb-2">読み取り後、参加を確認してから献立や設定を反映します</p>
-        <div class="flex justify-center my-2">
-          <div class="p-2 bg-white rounded-2xl shadow-sm border border-slate-200 inline-block">
-            <img src="${qrUrl}" alt="共有用QRコード" class="w-44 h-44 mx-auto block" loading="lazy">
-          </div>
-        </div>
+        <div id="family-qr-host" class="family-qr-host"><p role="status">QRコードを準備しています…</p></div>
+        <p class="text-xs text-slate-500">画面を明るくして、相手のカメラにQR全体を写してください。</p>
         <div class="mt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
           <button onclick="copyShareUrl()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors border border-indigo-200 active:scale-95 cursor-pointer">
             <i data-lucide="link" class="w-3.5 h-3.5"></i>
@@ -2145,6 +2164,7 @@ function renderSyncModalContent() {
       </div>
     `;
   }
+  if (state.familySyncCode) prepareFamilyQr();
   safeCreateIcons();
 }
 
@@ -5033,6 +5053,7 @@ function setupUniversalNavigation() {
     else setAppScreen(screen,false);
   });
 }
+
 
 
 

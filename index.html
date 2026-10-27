@@ -691,12 +691,99 @@
 
     .home-child-dislikes-btn { background:#fff0ec;border-color:#e2b7ad;color:#70413a;white-space:nowrap; }
     .home-child-dislikes-btn:focus-visible { outline:3px solid #0B6F66;outline-offset:2px; }
+
+    /* Universal entry: choose one task, then see only that task. */
+    #section-columns { display:none; }
+    :root { --ud-ink:#173f33;--ud-green:#245b46;--ud-paper:#fffcf5;--ud-line:#d9ded0; }
+    body { background:var(--ud-paper) !important;background-attachment:scroll;color:var(--ud-ink);font-family:'Noto Sans JP',sans-serif;font-size:16px; }
+    [hidden],.hidden { display:none !important; }
+    body>.home-header,body>.budget-overview,body>#main-tab-nav,body>.compact-settings,body>footer { display:none !important; }
+    body>main { max-width:640px !important;min-height:0 !important;padding:0 20px 32px !important;flex:none !important; }
+    body[data-screen="home"]>main { display:none !important; }
+    button,a,input,select,summary { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer;font-family:inherit; }
+    button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible { outline:3px solid #156c9b !important;outline-offset:4px; }
+    button:disabled { opacity:.45;cursor:default; }
+    .ud-home { width:100%;max-width:480px;margin:auto;padding:clamp(28px,7vh,64px) 24px 24px;min-height:100svh;display:flex;flex-direction:column;box-sizing:border-box; }
+    .ud-home h1 { text-align:center;color:var(--ud-ink);font-size:clamp(25px,7vw,32px);font-weight:800;letter-spacing:.02em;margin:0 0 clamp(28px,6vh,48px); }
+    .ud-home-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px; }
+    .ud-tile { border:2px solid transparent;border-radius:20px;min-height:180px;padding:24px 12px 20px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:var(--ud-ink);font-size:23px;font-weight:800;line-height:1.4; }
+    .ud-tile:hover { border-color:var(--ud-green); }
+    .ud-tile:active { filter:brightness(.96); }
+    .ud-tile svg { width:90px;height:90px;max-width:100%; }
+    .ud-tile-meal,.ud-tile-family { background:#e9eddf; }
+    .ud-tile-shop { background:#ffecdf; }.ud-tile-child { background:#fff2d9; }
+    .ud-home-links { display:flex;justify-content:space-around;gap:16px;margin-top:auto;padding-top:36px; }
+    .ud-home-links button { min-height:48px;padding:8px 12px;font-size:16px;background:none;border:0;color:var(--ud-ink); }
+    .ud-home-links button+button { border-left:1px solid var(--ud-line);padding-left:28px; }
+    .ud-workspace { width:100%;max-width:640px;margin:0 auto;padding:20px 20px 16px;box-sizing:border-box; }
+    .ud-home-back { display:flex;align-items:center;gap:8px;min-height:48px;padding:4px 0;color:var(--ud-green);font-size:16px;background:none;border:0; }
+    .ud-workspace h1 { text-align:center;font-size:28px;font-weight:800;line-height:1.4;margin:14px 0 20px;outline:none; }
+    .ud-meal-context { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px;font-size:16px; }
+    .ud-meal-context button { min-height:48px;border:1px solid var(--ud-green);border-radius:12px;padding:0 16px;background:var(--ud-paper);font-size:16px; }
+    .ud-field { background:#fffdf8;border:1px solid #e4e4d8;border-radius:20px;padding:20px;margin:0 0 24px;min-width:0; }
+    .ud-field legend { float:left;width:100%;font-size:20px;font-weight:800;margin-bottom:24px; }
+    .ud-stepper { display:flex;align-items:center;justify-content:space-between;clear:both;gap:20px; }
+    .ud-stepper button { border:0;border-radius:50%;width:64px;height:64px;background:#e4e9d8;color:var(--ud-ink);font-size:32px; }
+    .ud-stepper button:last-child { color:white;background:#527b59; }
+    .ud-stepper output { font-size:42px;font-weight:800; }
+    .ud-budgets { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;clear:both; }
+    .ud-budgets button { position:relative;padding:25px 4px;min-height:80px;border:2px solid #ced1bf;border-radius:12px;background:#fffdf8;font-size:18px;font-weight:700;color:var(--ud-ink); }
+    .ud-budgets button[aria-pressed="true"] { border-color:var(--ud-green); }
+    .ud-budgets button[aria-pressed="true"]:after { content:'✓';position:absolute;top:-14px;right:10px;background:var(--ud-green);color:white;width:28px;height:28px;border-radius:50%;line-height:28px; }
+    .ud-custom-budget { margin-top:16px;text-align:center; }.ud-custom-budget summary { min-height:48px;padding:12px;cursor:pointer;text-decoration:underline; }
+    .ud-custom-budget label { display:block;text-align:left; }.ud-custom-budget input { width:100%;min-height:52px;padding:8px;border:1px solid var(--ud-green);border-radius:8px;font-size:20px; }
+    .ud-primary { display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:64px;border:0;border-radius:16px;background:var(--ud-green);color:#fff;padding:16px;font-size:19px;font-weight:800;line-height:1.5; }
+    .ud-primary span { margin-left:auto;font-size:26px; }.ud-error { color:#9c2828;font-size:16px; }.ud-error:empty { display:none; }
+    .ud-settings { display:grid;gap:16px; }.ud-settings>button { display:flex;justify-content:space-between;text-align:left;padding:16px;border:1px solid var(--ud-line);border-radius:14px;background:white;color:var(--ud-ink);min-height:60px;font-size:17px; }
+    .ud-settings>a { padding:16px;text-decoration:underline; }.ud-empty { text-align:center;padding-top:40px; }.ud-empty p { margin-bottom:24px; }
+    body #panel-meal { display:flex !important;flex-direction:column;gap:12px; }body #panel-meal[hidden] { display:none !important; }
+    body .weekly-focus-head { order:4;padding:0 !important;background:none;border:0;box-shadow:none; }
+    body .weekly-focus-head>div { display:none; }
+    body .weekly-primary-btn { min-height:48px !important;font-size:14px !important;background:#f2f3e8;color:var(--ud-ink);box-shadow:none; }
+    body .weekly-subtools { order:5;padding:0 !important;margin:0 !important; }body .weekly-subtools button { min-height:48px !important;font-size:14px !important; }
+    .ud-recipe-link { order:6;align-self:flex-start;min-height:48px;background:none;color:var(--ud-green);text-decoration:underline;font-size:16px;border:0; }
+    body #weekly-plan-container { order:1;width:100%; } .ud-to-shopping { order:2;margin-top:4px; }
+    body #weekly-plan-container [id^="swipe-day-tab-"] { min-height:48px;padding:8px 2px !important;border-radius:12px;font-size:16px; }
+    body #weekly-plan-container [id^="swipe-day-tab-"] span:first-child { font-size:16px; }body #weekly-plan-container [id^="swipe-day-tab-"] span+span { display:none; }
+    body #weekly-plan-container [aria-current="date"] { outline:2px solid var(--ud-green);outline-offset:2px;background:var(--ud-green);color:white; }
+    body #weekly-plan-container div:has(> #btn-swipe-prev) { display:block; }body #btn-swipe-prev,body #btn-swipe-next { display:none; }
+    body [id^="swipe-card-"] { max-width:none !important;border:1px solid #e0e3d5;border-radius:20px;box-shadow:none; }
+    .weekly-dish { background:#fffdf8 !important;box-shadow:none !important;border:0 !important;border-bottom:1px solid #e3e4da !important;border-radius:0 !important; }
+    body .weekly-dish { padding:16px 10px !important; }.ud-dish-line { display:flex;align-items:center;gap:12px;min-width:0; }
+    .ud-dish-content { flex:1;min-width:0; }.ud-dish-label { display:block;font-size:14px;margin-bottom:6px;color:#52644f; }.ud-dish-title { font-size:18px;font-weight:750;line-height:1.55;overflow-wrap:anywhere;margin:0 0 10px; }
+    .ud-dish-actions { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }.ud-dish-actions>button,.ud-dish-actions summary { min-height:48px;padding:8px 14px;border:1px solid var(--ud-green);border-radius:10px;color:var(--ud-green);background:#fffdf8;font-size:16px; }
+    .ud-dish-actions>button:first-child { background:var(--ud-green);color:white; }.ud-dish-more { margin-left:auto; }.ud-dish-more summary { cursor:pointer; }.ud-dish-more button { display:block;min-height:48px;font-size:16px; }
+    body .weekly-main-visual { flex:0 0 76px;width:76px;height:76px; }.weekly-main-visual .recipe-visual-plate { width:60px;height:60px; }
+    body[data-screen="dislikes"] #modal-preferences,body[data-screen="sharing"] #modal-sync { position:static !important;inset:auto;background:none;backdrop-filter:none;padding:0 16px 24px;align-items:stretch; }
+    body[data-screen="dislikes"] #modal-preferences>div,body[data-screen="sharing"] #modal-sync>div { width:100%;max-width:600px;max-height:none;margin:0 auto;box-shadow:none;border:1px solid #e2e5d9;border-radius:20px; }
+    #modal-preferences button,#modal-preferences select,#modal-sync button { min-height:48px; }#modal-preferences select { font-size:16px; }
+    #preferences-dislikes-list button { font-size:16px; }#preferences-dislikes-list button[aria-pressed="true"]:before { content:'✓ '; }
+    @media(max-width:360px) { .ud-home{padding:28px 16px 20px}.ud-tile{min-height:154px;font-size:21px;padding:16px 8px}.ud-tile svg{width:72px;height:72px}.ud-budgets button{font-size:16px}.ud-field{padding:16px}body>main{padding-left:12px !important;padding-right:12px !important}.ud-workspace{padding-left:12px;padding-right:12px}.ud-dish-title{font-size:17px} }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important;transition:none !important;scroll-behavior:auto !important; } }
+    @media print { #ud-home,#ud-workspace,#ud-setup,#ud-settings { display:none !important; } }
+
   </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
+<body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
 
   <!-- ==================== 冷蔵庫貼り用 A4横1枚 印刷専用コンテナ（ブラウザ印刷時のみ表示） ==================== -->
   <div id="print-weekly-table-container"></div>
+
+
+  <section id="ud-home" class="ud-home" aria-labelledby="ud-home-title">
+    <h1 id="ud-home-title">週ぎめごはん</h1>
+    <div class="ud-home-grid">
+<button type="button" class="ud-tile ud-tile-meal" onclick="openMealScreen()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="31" fill="#f6b587"/><circle cx="50" cy="50" r="24" fill="none" stroke="#fffaf2" stroke-width="4"/><path d="M10 24v23m-5-23v14q0 10 10 10m5-24v14q0 10-10 10v28M88 23v53m0-53q-13 16 0 31" fill="none" stroke="#245746" stroke-width="4" stroke-linecap="round"/></svg><span>献立</span></button>
+<button type="button" class="ud-tile ud-tile-shop" onclick="goToAppTab('shopping')"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M12 20h12l11 45h42l12-34H29" fill="#ec9862" stroke="#ec9862" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="42" cy="80" r="7" fill="#ec9862"/><circle cx="74" cy="80" r="7" fill="#ec9862"/></svg><span>買い物</span></button>
+<button type="button" class="ud-tile ud-tile-child" onclick="openPreferencesModal(false)"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M23 45q-6-30 27-30t27 30" fill="#245746"/><path d="M25 42q-13-2-10 13 2 8 11 7 5 24 24 24t24-24q9 1 11-7 3-15-10-13" fill="#f4c49d" stroke="#245746" stroke-width="4"/><path d="M25 42q14-3 22-21 7 15 28 21" fill="#245746"/><circle cx="37" cy="51" r="3" fill="#245746"/><circle cx="63" cy="51" r="3" fill="#245746"/><path d="M40 67q10 9 20 0" fill="none" stroke="#245746" stroke-width="4" stroke-linecap="round"/></svg><span>苦手食材</span></button>
+<button type="button" class="ud-tile ud-tile-family" onclick="openSyncModal()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="26" r="14" fill="#245746"/><path d="M29 75V57q0-18 21-18t21 18v18" fill="#245746"/><circle cx="20" cy="51" r="11" fill="#85a68a"/><path d="M4 88V76q0-15 16-15t16 15v12" fill="#85a68a"/><circle cx="81" cy="49" r="11" fill="#ed9e6d"/><path d="M65 88V74q0-15 16-15t16 15v14" fill="#ed9e6d"/></svg><span>家族共有</span></button>
+</div><div class="ud-home-links"><button type="button" onclick="openGuideModal()"><span aria-hidden="true">ⓘ</span> 使い方</button><button type="button" onclick="setAppScreen('settings')"><span aria-hidden="true">⚙</span> 設定</button></div></section>
+  <header id="ud-workspace" class="ud-workspace" hidden>
+    <button type="button" class="ud-home-back" onclick="returnAppHome()"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 11 12 2l10 9h-3v11h-5v-7h-4v7H5V11Z" fill="currentColor"/></svg><span>ホーム</span></button>
+    <h1 id="ud-page-title" tabindex="-1">今週の献立</h1>
+    <div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition"></span><button type="button" onclick="openMealSetup()">変更</button></div>
+  </header>
 
   <!-- ==================== シンプルヘッダー ==================== -->
   <header class="home-header">
@@ -789,6 +876,26 @@
   <!-- ==================== メインコンテンツ（無駄な余白を削減し、スクロールなしで献立が直撃する設計） ==================== -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-2 sm:px-6 py-1 sm:py-2">
 
+
+    <section id="ud-setup" class="ud-setup" hidden aria-labelledby="ud-page-title">
+      <form onsubmit="event.preventDefault();saveMealSetup()">
+        <fieldset class="ud-field"><legend>家族の人数</legend><div class="ud-stepper"><button id="ud-minus" type="button" onclick="stepSetupServings(-1)" aria-label="人数を1人減らす">−</button><output id="ud-servings" aria-live="polite">4人</output><button id="ud-plus" type="button" onclick="stepSetupServings(1)" aria-label="人数を1人増やす">＋</button></div></fieldset>
+        <fieldset class="ud-field"><legend>1週間の予算</legend><div class="ud-budgets">
+          <button type="button" data-ud-budget="6000" onclick="pickSetupBudget(6000)">6,000円</button><button type="button" data-ud-budget="8000" onclick="pickSetupBudget(8000)">8,000円</button><button type="button" data-ud-budget="10000" onclick="pickSetupBudget(10000)">10,000円</button>
+        </div><details class="ud-custom-budget"><summary>金額を入力</summary><label for="ud-budget-input">1週間の予算（円）</label><input id="ud-budget-input" type="number" inputmode="numeric" min="3000" max="30000" step="100" oninput="readSetupBudget(this.value)"></details></fieldset>
+        <p id="ud-setup-error" class="ud-error" role="alert"></p><button type="submit" class="ud-primary">この条件で献立を作る <span aria-hidden="true">›</span></button>
+      </form>
+    </section>
+    <section id="ud-settings" class="ud-settings" hidden aria-labelledby="ud-page-title">
+      <button type="button" onclick="openMealSetup()">人数・週間予算を変更 <span aria-hidden="true">›</span></button>
+      <button type="button" onclick="openPreferencesModal(false)">子どもの苦手食材 <span aria-hidden="true">›</span></button>
+      <button type="button" onclick="openGuideModal()">使い方を見る <span aria-hidden="true">›</span></button>
+      <button type="button" onclick="openFeedbackModal()">ご意見・不具合報告 <span aria-hidden="true">›</span></button>
+      <button type="button" onclick="document.getElementById('btn-install-pwa').click()">ホーム画面に追加 <span aria-hidden="true">›</span></button>
+      <a href="privacy.html">プライバシーポリシー</a>
+    </section>
+    <section id="ud-shopping-empty" class="ud-empty" hidden><p>買い物リストはまだありません</p><button type="button" class="ud-primary" onclick="openMealScreen()">献立を作る</button></section>
+
     <!-- ================= 1. 1週間の献立タブ ================= -->
     <section id="panel-meal" role="tabpanel" aria-labelledby="tab-meal" tabindex="0" class="tab-content">
       <div class="weekly-focus-head">
@@ -800,7 +907,7 @@
 
         <button id="btn-regenerate-weekly" onclick="generateRandomWeeklyPlan(true)" class="weekly-primary-btn">
           <i data-lucide="sparkles" class="w-4 h-4"></i>
-          <span>作り直す</span>
+          <span>1週間を作り直す</span>
         </button>
       </div>
 
@@ -814,10 +921,12 @@
         </button>
       </div>
 
+      <button type="button" class="ud-recipe-link" onclick="goToAppTab('recipes')">レシピを探す ›</button>
       <!-- 献立カードコンテナ（JSで1日カード or 7日グリッドを動的レンダリング） -->
       <div id="weekly-plan-container">
         <!-- JSで動的レンダリング -->
       </div>
+      <button type="button" class="ud-primary ud-to-shopping" onclick="goToAppTab('shopping')">買い物リストへ <span aria-hidden="true">›</span></button>
     </section>
 
     <!-- ================= 2. 買い物リストタブ ================= -->
@@ -1214,7 +1323,7 @@
             キャンセル
           </button>
           <button onclick="savePreferencesAndGenerate()" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-sky-500 via-teal-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 transition-all shadow-md shadow-sky-200/50 active:scale-95">
-            保存して作成
+            保存する
           </button>
         </div>
       </div>
@@ -1597,19 +1706,19 @@
 
   <!-- ==================== トースト通知 ==================== -->
 
-  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900/90 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl backdrop-blur transition-all duration-300 transform opacity-0 translate-y-4 pointer-events-none flex items-center gap-2">
+  <div role="status" aria-live="polite" id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900/90 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl backdrop-blur transition-all duration-300 transform opacity-0 translate-y-4 pointer-events-none flex items-center gap-2">
     <!-- メッセージ -->
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261011_family_snapshot_fix"></script>
-  <script src="app.js?v=20261011_family_snapshot_fix"></script>
+  <script src="recipes.js?v=20261027_simple_home"></script>
+  <script src="app.js?v=20261027_simple_home"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261011_family_snapshot_fix', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_simple_home', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();
@@ -1642,3 +1751,4 @@
 </body>
 
 </html>
+

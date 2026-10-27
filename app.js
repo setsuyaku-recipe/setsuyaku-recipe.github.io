@@ -16,7 +16,7 @@ const state = {
   syncStatus: 'disconnected', // 'disconnected' | 'connected' | 'syncing' | 'error'
   lastSyncTime: 0,
   hasCompletedOnboarding: false, // 初回アンケート完了フラグ
-  activeTab: 'weekly', // 'weekly' | 'shopping' | 'recipes'
+  activeTab: 'home', // 'weekly' | 'shopping' | 'recipes'
   searchQuery: '',
   selectedCategory: 'all', // 'all' | 'main' | 'side' | 'soup'
   selectedCuisine: 'all', // 'all' | 'japanese' | 'western' | 'chinese'
@@ -189,24 +189,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchAndApplySync(true);
     }
 
-    // 献立データがない場合はランダム生成（共有参加直後は相手のデータがあるためスキップされる）
-    if (!state.weeklyPlan || typeof state.weeklyPlan !== 'object' || Object.keys(state.weeklyPlan).length < 7) {
-      generateRandomWeeklyPlan(false);
-    }
-
     render();
-
-    // 初回利用者はまず「使い方ガイド」を表示（共有URLから参加した人はガイドを出さずに献立をすぐ見せる）
-    const guideSeen = localStorage.getItem(STORAGE_KEY_GUIDE_SEEN);
-    if (!guideSeen && !state.familySyncCode) {
-      setTimeout(() => {
-        openGuideModal();
-      }, 400);
-    } else if (!state.hasCompletedOnboarding && !state.familySyncCode) {
-      setTimeout(() => {
-        openPreferencesModal(true);
-      }, 400);
-    }
+    setupUniversalNavigation();
   } catch (err) {
     console.error('Initialization error:', err);
   }
@@ -428,7 +412,7 @@ function loadSavedState() {
   }
 
   if (!isPlanValid && !state.isJoiningFromUrl) {
-    generateRandomWeeklyPlan(false);
+    state.weeklyPlan = null;
   }
 }
 
@@ -863,11 +847,7 @@ window.openCoreShoppingList = function() {
   }, 0);
 };
 
-window.goToAppTab = function(tab) {
-  state.activeTab = tab;
-  renderTabs();
-  renderActiveTab(false);
-};
+window.goToAppTab = function(tab) { setAppScreen(tab); };
 
 function setupEventListeners() {
   const mainTabs = Array.from(document.querySelectorAll('#main-tab-nav [role="tab"]'));
@@ -2258,8 +2238,8 @@ window.regenerateFamilySyncCode = async function() {
   const newCode = generate6DigitCode();
   state.familySyncCode = newCode;
   localStorage.setItem(STORAGE_KEY_SYNC_CODE, newCode);
-  await pushSyncData(newCode);
-  updateSyncStatusUI('connected');
+  const saved = await pushSyncData(newCode);
+  updateSyncStatusUI(saved ? 'connected' : 'disconnected');
   renderSyncModalContent();
   showToast(saved ? `新しいコード【${newCode}】を発行しました！` : 'サーバー保存に失敗しました。共有リンクから現在の献立を渡せます');
 };
@@ -2412,11 +2392,7 @@ function updateBudgetControls() {
 }
 
 function renderTabs() {
-  // Keep the document tall enough to avoid scroll clamping when a shorter panel opens.
-  const main = document.querySelector('main');
-  if (main) {
-    main.style.minHeight = `${Math.max(window.innerHeight, main.getBoundingClientRect().height)}px`;
-  }
+  syncAppScreen();
   document.querySelectorAll('[data-tab-target]').forEach(btn => {
     const tabId = btn.getAttribute('data-tab-target');
     const isActive = tabId === state.activeTab;
@@ -2424,6 +2400,7 @@ function renderTabs() {
     btn.setAttribute('aria-selected', String(isActive));
     btn.tabIndex = isActive ? 0 : -1;
     const panel = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!panel) return;
     panel.hidden = !isActive;
     panel.classList.toggle('hidden', !isActive);
   });
@@ -2791,7 +2768,7 @@ function renderWeeklyPlan() {
         const icon = pInfo ? pInfo.icon : '';
         const isAct = idx === state.activeSwipeDayIndex;
         return `
-          <button type="button" onclick="jumpToSwipeDay(${idx})" id="swipe-day-tab-${d.id}"
+          <button type="button" onclick="jumpToSwipeDay(${idx})" id="swipe-day-tab-${d.id}" aria-label="${d.name}${isAct ? '、選択中' : ''}" ${isAct ? 'aria-current="date"' : ''}
                   class="py-1 px-0.5 rounded-xl text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                     isAct
                       ? 'bg-slate-900 text-white font-black shadow-xs ring-2 ring-slate-900 ring-offset-1'
@@ -2914,43 +2891,15 @@ function renderDishRow(dayId, category, recipe, label) {
   }
 
   return `
-    <div class="weekly-dish weekly-dish-${category} flex flex-col p-2 sm:p-2.5 rounded-xl border ${cardBorder} transition-all group shadow-2xs w-full min-w-0 overflow-hidden">
-      <div class="flex items-start justify-between gap-1.5 sm:gap-2 w-full min-w-0">
-        ${category === 'main' ? `<div class="weekly-main-visual" onclick="openDetailModal(\'${recipe.id}\')">${getRecipeVisual(recipe)}</div>` : ''}
-        <!-- 料理名・バッジ・価格（クリックで作り方モーダル） -->
-        <div class="flex-1 min-w-0 cursor-pointer overflow-hidden" onclick="openDetailModal('${recipe.id}')">
-          <!-- 上段バッジ ＆ 価格 -->
-          <div class="flex items-center justify-between gap-1 mb-1">
-            <div class="flex items-center gap-1 sm:gap-1.5 flex-wrap min-w-0">
-              <span class="text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-2xs shrink-0 ${categoryBadgeClass}">${label}</span>
-              ${cuisineBadge}
-              <span class="text-[10px] text-slate-500 font-bold shrink-0">⏱️${recipe.time}</span>
-            </div>
-            <span class="text-[10px] sm:text-xs font-black text-teal-700 bg-teal-50 border border-teal-200/80 px-1.5 py-0.2 rounded-md shadow-2xs shrink-0 whitespace-nowrap">
-              ¥${recipe.approxCostPerPerson * state.servings}
-            </span>
-          </div>
-
-          <!-- 料理名（枠内で絶対に溢れず自然に折り返す） -->
-          <div class="text-xs sm:text-sm font-black text-slate-800 group-hover:text-teal-700 transition-colors leading-snug break-words break-all pr-0.5 sm:pr-1">
-            ${cleanTitle}
+    <div class="weekly-dish weekly-dish-${category}">
+      <div class="ud-dish-line">
+        ${category === 'main' ? `<div class="weekly-main-visual">${getRecipeVisual(recipe)}</div>` : ''}
+        <div class="ud-dish-content"><span class="ud-dish-label">${label}</span><h3 class="ud-dish-title">${cleanTitle}</h3>
+          <div class="ud-dish-actions"><button type="button" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">作り方</button><button type="button" onclick="openChangeModal('${dayId}', '${category}')" aria-label="${label}を変更">変更</button>
+            <details class="ud-dish-more"><summary aria-label="${cleanTitle}のその他の操作">…</summary><button type="button" onclick="toggleFavorite('${recipe.id}',event)">${state.favoriteRecipeIds.includes(recipe.id) ? '★ お気に入り解除' : '☆ お気に入り'}</button><button type="button" onclick="toggleBlacklist('${recipe.id}',event)">献立から除外</button></details>
           </div>
         </div>
-
-        <!-- 右端操作ボタン -->
-        <div class="flex items-center gap-0.5 shrink-0 pt-0.5">
-          <button onclick="toggleFavorite('${recipe.id}', event)" class="p-1 rounded-lg transition-transform hover:scale-110 ${state.favoriteRecipeIds.includes(recipe.id) ? 'text-amber-500 hover:text-amber-600' : 'text-slate-300 hover:text-amber-400'}" title="お気に入り">
-            <span class="text-sm leading-none">${state.favoriteRecipeIds.includes(recipe.id) ? '★' : '☆'}</span>
-          </button>
-          <button onclick="toggleBlacklist('${recipe.id}', event)" class="p-1 rounded-lg transition-transform hover:scale-110 text-slate-300 hover:text-rose-600" title="除外">
-            <span class="text-xs leading-none">🚫</span>
-          </button>
-          <button onclick="openChangeModal('${dayId}', '${category}')" class="p-1 text-slate-400 hover:text-teal-600 hover:bg-white rounded-lg transition-colors" title="変更">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-      </div>
-      ${altHtml}
+      </div>${altHtml}
     </div>
   `;
 }
@@ -3271,7 +3220,7 @@ function renderShoppingList() {
     container.innerHTML = `
       <div class="col-span-full text-center py-12 text-slate-400">
         <i data-lucide="shopping-cart" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
-        <p>献立が選択されていません。「1週間の献立」タブから生成してください。</p>
+        <p>献立がまだありません。ホームの「献立」から作成できます。</p>
       </div>
     `;
     if (purchasedContainer) purchasedContainer.innerHTML = '';
@@ -4387,8 +4336,6 @@ window.savePreferencesAndGenerate = function() {
     if (newServings && newServings !== state.servings) {
       state.servings = newServings;
       saveServings();
-      state.targetBudget = state.servings * 1500;
-      saveBudget();
       const servingsSelect = document.getElementById('servings-select');
       if (servingsSelect) servingsSelect.value = state.servings;
       const budgetInput = document.getElementById('target-budget-input');
@@ -4407,7 +4354,8 @@ window.savePreferencesAndGenerate = function() {
   updateCoreFlowSummary();
   state.hasCompletedOnboarding = true;
   closePreferencesModal();
-  generateRandomWeeklyPlan(true);
+  if (state.weeklyPlan) generateRandomWeeklyPlan(true);
+  else showToast('苦手食材を保存しました');
 
   if (state.familySyncCode) {
     pushSyncDataDebounced();
@@ -4881,3 +4829,97 @@ window.deleteCustomRecipe = function(id, event) {
   renderRecipeBook();
   showToast('レシピを削除しました');
 };
+
+
+
+
+// Universal-design navigation: sparse home, one task per screen.
+let setupDraft = { servings: 4, budget: 8000 };
+const UD_SETUP_KEY = 'frugal_meal_setup_complete_v1';
+function syncAppScreen() {
+  const screen = state.activeTab;
+  document.body.dataset.screen = screen;
+  document.getElementById('ud-home').hidden = screen !== 'home';
+  document.getElementById('ud-workspace').hidden = screen === 'home';
+  const titles = {weekly:'今週の献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
+  document.getElementById('ud-page-title').textContent = titles[screen] || '';
+  document.getElementById('ud-setup').hidden = screen !== 'setup';
+  document.getElementById('ud-settings').hidden = screen !== 'settings';
+  document.getElementById('ud-meal-context').hidden = screen !== 'weekly';
+  document.getElementById('ud-condition').textContent = `${state.servings}人分・週${Number(state.targetBudget).toLocaleString()}円`;
+  const emptyShopping = screen === 'shopping' && !state.weeklyPlan;
+  document.getElementById('ud-shopping-empty').hidden = !emptyShopping;
+  document.querySelector('main').hidden = ['home','dislikes','sharing'].includes(screen);
+}
+function setAppScreen(screen, push = true) {
+  if (!['home','weekly','shopping','recipes','setup','dislikes','sharing','settings'].includes(screen)) screen = 'home';
+  const changed = state.activeTab !== screen;
+  state.activeTab = screen;
+  if (changed && push) history.pushState({udScreen:screen},'',location.pathname+location.search);
+  render();
+  if (screen === 'shopping' && !state.weeklyPlan) document.getElementById('panel-shopping').hidden = true;
+  if (changed) { window.scrollTo(0,0); document.getElementById(screen==='home'?'ud-home-title':'ud-page-title').focus({preventScroll:true}); }
+}
+window.setAppScreen = setAppScreen;
+function returnAppHome(push = true) {
+  for (const id of ['modal-preferences','modal-sync','modal-guide','modal-recipe-detail','modal-change','modal-feedback']) {
+    const el=document.getElementById(id); if(el){el.classList.add('hidden');el.classList.remove('flex');}
+  }
+  setAppScreen('home',push);
+}
+window.returnAppHome = returnAppHome;
+function openMealScreen() {
+  const configured = localStorage.getItem(UD_SETUP_KEY) === 'true' ||
+    (localStorage.getItem(STORAGE_KEY_PLAN) && localStorage.getItem(STORAGE_KEY_BUDGET));
+  if (!configured || !state.weeklyPlan) return openMealSetup();
+  setAppScreen('weekly');
+}
+window.openMealScreen = openMealScreen;
+function openMealSetup() {
+  const existing = !!state.weeklyPlan;
+  setupDraft = { servings: existing || localStorage.getItem(STORAGE_KEY_SERVINGS) ? state.servings : 4, budget: existing ? state.targetBudget : 8000 };
+  document.getElementById('ud-setup-error').textContent='';
+  setAppScreen('setup');
+  updateSetupDraft();
+}
+window.openMealSetup = openMealSetup;
+function updateSetupDraft() {
+  document.getElementById('ud-servings').textContent = `${setupDraft.servings}人`;
+  document.getElementById('ud-minus').disabled = setupDraft.servings <= 1;
+  document.getElementById('ud-plus').disabled = setupDraft.servings >= 7;
+  document.querySelectorAll('[data-ud-budget]').forEach(el=>el.setAttribute('aria-pressed',String(Number(el.dataset.udBudget)===setupDraft.budget)));
+  document.getElementById('ud-budget-input').value = setupDraft.budget || '';
+}
+window.stepSetupServings = delta => { setupDraft.servings=Math.max(1,Math.min(7,setupDraft.servings+delta));updateSetupDraft(); };
+window.pickSetupBudget = amount => {setupDraft.budget=amount;updateSetupDraft();};
+window.readSetupBudget = value => {setupDraft.budget=Number(value);document.querySelectorAll('[data-ud-budget]').forEach(el=>el.setAttribute('aria-pressed',String(Number(el.dataset.udBudget)===setupDraft.budget)));};
+window.saveMealSetup = function() {
+  if (!Number.isFinite(setupDraft.budget) || setupDraft.budget < 3000 || setupDraft.budget > 30000 || setupDraft.budget % 100 !== 0) {
+    document.getElementById('ud-setup-error').textContent='予算は3,000〜30,000円の間で、100円単位で入力してください。';return;
+  }
+  state.servings=setupDraft.servings;state.targetBudget=setupDraft.budget;
+  saveServings();saveBudget();localStorage.setItem(UD_SETUP_KEY,'true');
+  generateRandomWeeklyPlan(false);setAppScreen('weekly');
+};
+const originalOpenPreferences = window.openPreferencesModal;
+window.openPreferencesModal = function(onboarding=false) {setAppScreen('dislikes');originalOpenPreferences(onboarding);};
+const originalClosePreferences = window.closePreferencesModal;
+window.closePreferencesModal = function() {originalClosePreferences();if(state.activeTab==='dislikes')returnAppHome();};
+const originalOpenSync = window.openSyncModal;
+window.openSyncModal = function() {setAppScreen('sharing');originalOpenSync();};
+const originalCloseSync = window.closeSyncModal;
+window.closeSyncModal = function() {originalCloseSync();if(state.activeTab==='sharing')returnAppHome();};
+window.openCoreBudgetPanel = openMealSetup;
+window.openCoreShoppingList = () => setAppScreen('shopping');
+function setupUniversalNavigation() {
+  document.getElementById('ud-home-title').tabIndex=-1;
+  history.replaceState({udScreen:'home'},'',location.pathname+location.search);
+  window.addEventListener('popstate',e=>{
+    const screen=e.state?.udScreen || 'home';
+    returnAppHome(false);
+    if(screen==='dislikes'){setAppScreen(screen,false);originalOpenPreferences(false);}
+    else if(screen==='sharing'){setAppScreen(screen,false);originalOpenSync();}
+    else if(screen==='setup'){setAppScreen(screen,false);updateSetupDraft();}
+    else setAppScreen(screen,false);
+  });
+}

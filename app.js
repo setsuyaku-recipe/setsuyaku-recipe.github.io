@@ -2108,13 +2108,13 @@ function renderSyncModalContent() {
       <!-- 別の家族の共有コードを入力して参加する枠 -->
       <div class="bg-slate-50/80 border border-slate-200 rounded-2xl p-3.5">
         <label for="input-join-code-active" class="block font-bold text-slate-800 mb-1.5 text-xs">👥 別の家族コードを入力して参加</label>
-        <div class="flex gap-2">
+        <div class="family-join-form">
           <input type="text" id="input-join-code-active" placeholder="例: 8AB4YZ" maxlength="8" class="flex-1 border-2 border-indigo-200 rounded-xl px-3 py-2 text-slate-900 font-black text-base focus:ring-2 focus:ring-indigo-400 uppercase tracking-widest text-center bg-white" onkeydown="if(event.key==='Enter') handleManualJoinActiveSubmit()">
           <button onclick="handleManualJoinActiveSubmit()" class="px-4 py-2 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm cursor-pointer active:scale-95 shrink-0">
             参加する
           </button>
         </div>
-        <p class="text-[10px] text-slate-500 mt-1">※相手のコードを入力すると、相手の献立や予算に即座に切り替わります</p>
+        <p class="text-[10px] text-slate-500 mt-1">※参加を確認すると、この端末の献立や予算を相手の共有内容に置き換えます</p>
       </div>
 
       <!-- 共有管理ボタン群（再発行・離脱） -->
@@ -2154,7 +2154,7 @@ function renderSyncModalContent() {
       <!-- 手入力で参加 -->
       <div class="bg-white border-2 border-indigo-100 rounded-2xl p-3.5">
         <label for="input-join-code" class="block font-bold text-slate-800 mb-1.5 text-xs">👥 家族の共有コードを入力して参加</label>
-        <div class="flex gap-2">
+        <div class="family-join-form">
           <input type="text" id="input-join-code" placeholder="例: 8AB4YZ" maxlength="8" class="flex-1 border-2 border-indigo-200 rounded-xl px-3 py-2 text-slate-900 font-black text-base focus:ring-2 focus:ring-indigo-400 uppercase tracking-widest text-center" onkeydown="if(event.key==='Enter') handleManualJoinSubmit()">
           <button onclick="handleManualJoinSubmit()" class="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm cursor-pointer active:scale-95 shrink-0">
             参加する

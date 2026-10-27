@@ -901,6 +901,15 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 .family-qr-host{margin:12px auto;padding:8px;background:#fff;max-width:320px;min-height:80px;color:#3c5145;font-size:13px;line-height:1.6;border:1px solid #d9dfd4;border-radius:8px}
 .family-join-qr{display:block;width:100%;height:auto;aspect-ratio:1;background:#fff;object-fit:contain}
 .family-qr-host button{min-height:44px;padding:8px 14px;color:#285c47;text-decoration:underline}
+
+/* Inputs must shrink inside the family sharing screen, including narrow phones. */
+#modal-sync,#sync-modal-content,#modal-sync>div{min-width:0;max-width:100%;box-sizing:border-box}
+#modal-sync input{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+.family-join-form{display:flex;flex-direction:column;align-items:stretch;gap:8px;width:100%;min-width:0}
+.family-join-form input{flex:1;min-height:48px;font-size:16px}
+.family-join-form button{width:100%;min-height:48px;white-space:nowrap}
+@media(min-width:480px){.family-join-form{flex-direction:row}.family-join-form input{width:0}.family-join-form button{width:auto}}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1724,14 +1733,14 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_readable_family_qr"></script>
-  <script src="app.js?v=20261027_readable_family_qr"></script>
+  <script src="recipes.js?v=20261027_share_layout"></script>
+  <script src="app.js?v=20261027_share_layout"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_readable_family_qr', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_share_layout', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

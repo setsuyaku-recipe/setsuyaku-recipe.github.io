@@ -1649,12 +1649,7 @@ function closeGuideModal() {
     localStorage.setItem(STORAGE_KEY_GUIDE_SEEN, 'true');
   }
 
-  // オンボーディングがまだなら好み設定を開く
-  if (!state.hasCompletedOnboarding) {
-    setTimeout(() => {
-      openPreferencesModal(true);
-    }, 300);
-  }
+  // The user chooses their next task from home; do not open another screen automatically.
 }
 window.closeGuideModal = closeGuideModal;
 

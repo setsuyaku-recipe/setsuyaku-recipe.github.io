@@ -1454,142 +1454,16 @@
   </div>
 
   <!-- ==================== モーダル: はじめての使い方ガイド ==================== -->
-  <div id="modal-guide" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] shadow-2xl overflow-y-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col p-6 border border-sky-100">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <div class="flex items-center gap-2.5">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-400 via-teal-400 to-lime-300 flex items-center justify-center text-white shadow-md shadow-sky-200/50 text-xl shrink-0">
-            🍳
-          </div>
-          <div>
-            <h3 class="text-base font-black text-slate-900">はじめての使い方ガイド</h3>
-            <p class="text-[11px] text-slate-500 font-bold">1分でわかる！節約献立＆買い物リストの使い方</p>
-          </div>
-        </div>
-        <button id="btn-close-guide" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="space-y-4 text-xs">
-        <!-- STEP 1 -->
-        <div class="p-4 rounded-2xl bg-sky-50/80 border border-sky-200/80 flex flex-col sm:flex-row gap-3 shadow-2xs">
-          <div class="w-8 h-8 rounded-xl bg-sky-500 text-white font-black flex items-center justify-center text-sm shrink-0 shadow-xs">
-            1
-          </div>
-          <div class="flex-1 space-y-1.5">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-black text-slate-900 text-sm">家族人数と目標予算をえらぶ</h4>
-              <span class="text-[10px] bg-sky-200/80 text-sky-800 font-bold px-2 py-0.5 rounded-full">画面上部</span>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-xs">
-              画面の上にある<strong>「家族の人数（1〜7人）」</strong>と<strong>「目標予算（例: ¥7,500）」</strong>をタップして設定します。
-            </p>
-            <div class="bg-white/90 p-2.5 rounded-xl border border-sky-100 text-[11px] text-slate-600 space-y-1">
-              <span class="font-bold text-sky-800 block">💡 子どもの苦手な食べ物があるときは？</span>
-              <span>上部の<strong>「👶 お子様の好み設定」</strong>から、ピーマン・きのこ・魚などの苦手食材をタップしておくだけで、献立から自動で除外（または同じ材料で別メニューを提案）します。</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 矢印 -->
-        <div class="flex justify-center text-slate-300 font-black text-base my-0.5">
-          <i data-lucide="arrow-down" class="w-4 h-4"></i>
-        </div>
-
-        <!-- STEP 2 -->
-        <div class="p-4 rounded-2xl bg-teal-50/80 border border-teal-200/80 flex flex-col sm:flex-row gap-3 shadow-2xs">
-          <div class="w-8 h-8 rounded-xl bg-teal-600 text-white font-black flex items-center justify-center text-sm shrink-0 shadow-xs">
-            2
-          </div>
-          <div class="flex-1 space-y-1.5">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-black text-slate-900 text-sm">「献立を生成する」を押す</h4>
-              <span class="text-[10px] bg-teal-200/80 text-teal-800 font-bold px-2 py-0.5 rounded-full">緑のボタン</span>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-xs">
-              <strong>「✨ 献立を生成する」</strong>ボタンを押すと、月曜〜日曜までの7日分の「主菜・副菜・汁物」が一瞬で完成します！
-            </p>
-            <div class="bg-white/90 p-2.5 rounded-xl border border-teal-100 text-[11px] text-slate-600 space-y-1">
-              <span class="font-bold text-teal-800 block">💡 献立の料理を1品だけ変えたいときは？</span>
-              <span>各料理の右端にある<strong>「🔄（シャッフル）」</strong>ボタンを押すと、その料理だけ別の節約レシピにパッと切り替わります。料理名をタップすれば、詳しい材料や作り方も見られます。</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 矢印 -->
-        <div class="flex justify-center text-slate-300 font-black text-base my-0.5">
-          <i data-lucide="arrow-down" class="w-4 h-4"></i>
-        </div>
-
-        <!-- STEP 3 -->
-        <div class="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex flex-col sm:flex-row gap-3 shadow-2xs">
-          <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-sm shrink-0 shadow-xs">
-            3
-          </div>
-          <div class="flex-1 space-y-2">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-black text-slate-900 text-sm">「買い物リスト」を持ってスーパーへ！</h4>
-              <span class="text-[10px] bg-emerald-200/80 text-emerald-800 font-bold px-2 py-0.5 rounded-full">上部タブ</span>
-            </div>
-            <p class="text-slate-600 leading-relaxed text-xs">
-              上部の<strong>「🛒 買い物リスト」</strong>タブを開くと、献立の全食材が「野菜」「肉・魚」「調味料」などの<strong>スーパーの売り場順に自動で合算</strong>されています。
-            </p>
-
-            <!-- 曜日チェック連動の重要案内 -->
-            <div class="bg-amber-50/90 p-2.5 rounded-xl border border-amber-200/90 text-[11px] text-amber-950 space-y-1">
-              <span class="font-black text-amber-900 flex items-center gap-1">
-                <span>⚡</span>
-                <span>献立の「曜日チェック」で買い物リストが自動連動！</span>
-              </span>
-              <p class="leading-relaxed text-[11px] text-slate-700">
-                「今週は水曜日に外食する」「金曜日は残り物で済ませる」という時は、<strong>「1週間の献立」画面でその曜日のチェック（☑）を外すだけ！</strong><br>
-                チェックを外した曜日の食材が、この買い物リストから<strong>自動でまるごと除外</strong>され、作る日だけの食材を無駄なく買い出しできます。
-              </p>
-            </div>
-
-            <div class="bg-white/90 p-2.5 rounded-xl border border-emerald-100 text-[11px] text-slate-600 space-y-1">
-              <span class="font-bold text-emerald-800 block">💡 買い出し中の便利ワザ</span>
-              <ul class="space-y-0.5 list-disc pl-4 text-[11px]">
-                <li>カゴに入れた食材をタップすると、<strong>「購入済み」エリアへ自動で移動</strong>して買い忘れを防げます。</li>
-                <li><strong>「家にある基本調味料を隠す」</strong>にチェックを入れると、しょうゆ・塩などの常備調味料が消えてお肉・野菜が見やすくなります。</li>
-                <li><strong>「LINEで送る」</strong>ボタンを押せば、買い出し担当のパートナーへリストを一瞬で送信できます。</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- よくある便利機能（Q&A） -->
-        <div class="mt-4 pt-4 border-t border-slate-200/80">
-          <h4 class="font-black text-slate-900 text-xs mb-2.5 flex items-center gap-1.5">
-            <span>❓ よくある質問・もっと便利な使い方</span>
-          </h4>
-          <div class="space-y-2 text-[11px]">
-            <div class="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200/80">
-              <span class="font-bold text-amber-950 block mb-0.5">Q. 献立の曜日のチェックを外すとどうなるの？（外食・予定用）</span>
-              <span class="text-slate-600">各曜日のカードにある<strong>チェックボックス（☑）を外すと、その日の食材が買い物リストから自動的に除外</strong>され、概算の買い物予算も安くなります。外食や作り置き消費の日などに不要な食材を買わずに済みます。</span>
-            </div>
-            <div class="bg-indigo-50/80 p-2.5 rounded-xl border border-indigo-200/80">
-              <span class="font-bold text-indigo-900 block mb-0.5">📱 スマホのホーム画面に追加（本物のアプリのように使う）</span>
-              <span class="text-slate-600 block">SafariやChromeのメニューから<strong>「ホーム画面に追加」</strong>をすると、スマホに🍳アプリアイコンが追加されます！電波が届きにくい<strong>地下スーパーでも圏外のままサクサク開ける</strong>ようになります。</span>
-            </div>
-            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
-              <span class="font-bold text-slate-800 block mb-0.5">Q. 夫婦や家族のスマホ同士でリアルタイム共有できる？</span>
-              <span class="text-slate-600">上部の<strong>「👥 家族共有」</strong>を開き、相手のスマホカメラでQRコードを読み取るだけ！ログインやパスワード不要で、同じ献立や買い物リストを一緒に使えます。</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <label class="flex items-center gap-2 cursor-pointer text-[11px] font-bold text-slate-600">
-          <input type="checkbox" id="chk-guide-dont-show" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 accent-teal-600">
-          <span>次回から自動表示しない</span>
-        </label>
-        <button id="btn-start-using" class="w-full sm:w-auto px-5 py-2.5 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-sky-500 via-teal-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 transition-all shadow-md shadow-sky-200/50 active:scale-95 text-center">
-          さっそく使ってみる！ 🚀
-        </button>
-      </div>
+  <div id="modal-guide" class="fixed inset-0 z-50 bg-slate-900/60 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="ud-guide-title">
+    <div class="bg-white rounded-3xl p-6 max-w-lg w-full" style="max-height:90svh;overflow:auto;color:#173f33">
+      <h2 id="ud-guide-title" style="font-size:24px;font-weight:800;margin-bottom:24px">使い方</h2>
+      <ol style="display:grid;gap:24px;font-size:16px;line-height:1.8;padding-left:20px;list-style:decimal">
+        <li><strong>やりたいことを選ぶ</strong><p>ホームの「献立」「買い物」「苦手食材」「家族共有」から選びます。</p></li>
+        <li><strong>初回は人数と予算を設定</strong><p>「献立」を開き、条件を決めて作成します。次回からは設定を覚えています。</p></li>
+        <li><strong>献立から買い物へ</strong><p>料理の「作り方」を確認できます。「買い物リストへ」で必要な食材を確認できます。</p></li>
+      </ol>
+      <p style="margin:24px 0;font-size:16px">迷ったら「ホーム」で戻れます。</p>
+      <button id="btn-start-using" type="button" class="ud-primary" onclick="closeGuideModal()">閉じる</button>
     </div>
   </div>
 
@@ -1711,14 +1585,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_simple_home"></script>
-  <script src="app.js?v=20261027_simple_home"></script>
+  <script src="recipes.js?v=20261027_simple_home_v2"></script>
+  <script src="app.js?v=20261027_simple_home_v2"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_simple_home', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_simple_home_v2', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

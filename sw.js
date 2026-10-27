@@ -1,6 +1,6 @@
 // Service Worker for 週ぎめごはん (PWA)
 // 更新時に旧画面が残らないことを最優先したキャッシュ戦略
-const CACHE_VERSION = '20261027_balanced_meal_typography';
+const CACHE_VERSION = '20261027_menu_cards';
 const CACHE_PREFIX = 'setsuyaku-recipe-';
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -173,5 +173,6 @@ self.addEventListener('fetch', (event) => {
     })());
   }
 });
+
 
 

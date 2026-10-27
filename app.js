@@ -2621,6 +2621,7 @@ function updateSwipeNavIndicators() {
   DAYS_OF_WEEK.forEach((d, idx) => {
     const tabBtn = document.getElementById(`swipe-day-tab-${d.id}`);
     if (tabBtn) {
+      tabBtn.dataset.selected = String(idx === state.activeSwipeDayIndex);
       if (idx === state.activeSwipeDayIndex) {
         tabBtn.className = 'py-1 px-0.5 rounded-xl text-center transition-all cursor-pointer flex flex-col items-center justify-center bg-slate-900 text-white font-black shadow-xs ring-2 ring-slate-900 ring-offset-1';
       } else {
@@ -2719,11 +2720,12 @@ function renderWeeklyPlan() {
           isCooked ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-sky-100/90 hover:border-sky-200'
         } ${isSwipeMode ? 'shrink-0 w-full max-w-md mx-auto' : ''}">
           <div class="reading-day-header"><h2>${day.name.replace(/^[^月火水木金土日]*([月火水木金土日]曜日).*$/, '$1')}</h2>
-            <details class="reading-day-options"><summary>この日の設定</summary><div>
+            <span class="meal-day-cost">${state.servings}人分 約${(dayCost * state.servings).toLocaleString()}円</span><details class="reading-day-options"><summary>この日の設定</summary><div>
               <span>${state.servings}人分 約¥${dayCost * state.servings}</span>
               <label><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShoppingDay('${day.id}')">買い物リストに入れる</label>
               <button type="button" onclick="toggleCookedDay('${day.id}')">${isCooked ? '調理済みを解除' : '作ったことを記録'}</button>
               <button type="button" onclick="shuffleDayMenu('${day.id}')">この日の献立を変更</button>
+              ${[['main',mainRecipe,'主菜'],['side',sideRecipe,'副菜'],['soup',soupRecipe,'汁物']].filter(x=>x[1]).map(([category,recipe,label]) => `<details class="meal-extras"><summary>${label}のその他の操作</summary><div><button type="button" onclick="openChangeModal('${day.id}','${category}')">候補から選ぶ</button><button type="button" onclick="toggleFavorite('${recipe.id}',event)">お気に入り切替</button><button type="button" onclick="toggleBlacklist('${recipe.id}',event)">献立から除外</button></div></details>`).join('')}
             </div></details>
           </div>
 
@@ -2745,14 +2747,14 @@ function renderWeeklyPlan() {
         const icon = pInfo ? pInfo.icon : '';
         const isAct = idx === state.activeSwipeDayIndex;
         return `
-          <button type="button" onclick="jumpToSwipeDay(${idx})" id="swipe-day-tab-${d.id}" aria-label="${d.name}${isAct ? '、選択中' : ''}" ${isAct ? 'aria-current="date"' : ''}
+          <button type="button" onclick="jumpToSwipeDay(${idx})" id="swipe-day-tab-${d.id}" data-selected="${isAct}" aria-label="${d.name}${isAct ? '、選択中' : ''}" ${isAct ? 'aria-current="date"' : ''}
                   class="py-1 px-0.5 rounded-xl text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                     isAct
                       ? 'bg-slate-900 text-white font-black shadow-xs ring-2 ring-slate-900 ring-offset-1'
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
                   }">
             <span class="text-[11px] sm:text-xs font-black leading-none">${d.label}</span>
-            <span class="text-xs sm:text-sm leading-none mt-0.5">${icon}</span>
+            <span class="meal-weekday-caption">曜日</span><span class="meal-day-check" aria-hidden="true">${isAct ? "✓" : ""}</span>
           </button>
         `;
       }).join('');
@@ -2815,6 +2817,7 @@ function renderWeeklyPlan() {
     generateRandomWeeklyPlan(false);
   }
 
+  renderMealSwapStatus();
   safeCreateIcons();
 }
 
@@ -2881,23 +2884,77 @@ function renderDishRow(dayId, category, recipe, label) {
   }
 
   const reading = getMealReadingName(recipe);
-  return `
-    <div class="weekly-dish weekly-dish-${category}">
-      <div class="balanced-dish-top"><span class="balanced-dish-label">${label}</span>
-        ${category === 'main' ? `<span class="balanced-cooktime">目安 ${recipe.time}</span>` : ''}
-        <details class="ud-dish-more"><summary title="変更・その他" aria-label="${label}の変更・その他">…</summary>
-          <div class="ud-dish-menu"><button type="button" onclick="openChangeModal('${dayId}', '${category}')">料理を変更</button>
-            <button type="button" onclick="toggleFavorite('${recipe.id}',event)">${state.favoriteRecipeIds.includes(recipe.id) ? '★ お気に入り解除' : '☆ お気に入り'}</button>
-            <button type="button" onclick="toggleBlacklist('${recipe.id}',event)">献立から除外</button>
-          </div>
-        </details>
-      </div>
-      <h3 class="ud-dish-heading"><button type="button" class="ud-dish-open balanced-dish-open" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">
-        <span class="ud-dish-title">${reading.title}</span><span class="balanced-recipe-link">作り方 <span aria-hidden="true">›</span></span>
-      </button></h3>${altHtml}
-    </div>
-  `;
+  const known = {
+    '鶏ひき肉と豆腐のふんわり照り焼きつくね': ['鶏ひき肉と豆腐の', '照り焼きつくね', '甘辛だれの、やわらかつくね'],
+    '長ネギのとろとろ焼きネギ味噌': ['', '長ねぎのみそ焼き', '焼いて香ばしく、みそ味に']
+  };
+  const parts = known[cleanTitle] || ['', reading.title, ''];
+  return `<article class="weekly-dish weekly-dish-${category} meal-card" aria-label="${label}">
+    <div class="meal-card-band"><span aria-hidden="true">${category === 'main' ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3v6q0 3 3 3t3-3V3M7 3v18M19 3q-5 4-4 10h4V3v18"/></svg>' : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18q0 11-9 11T3 7ZM8 18v3h8v-3"/></svg>'}</span><span>${label}</span><span class="meal-band-rule"></span></div>
+    <div class="meal-card-body"><h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}')">${parts[1]}</button></h3>
+    ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}</div>
+    <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}')">作り方 <span aria-hidden="true">›</span></button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更"><span aria-hidden="true">⇄</span> この１品を変更</button></div>
+
+  </article>`;
 }
+
+let mealSwapUndo = null;
+const mealSwapHistory = new Map();
+function commitMealSwap(dayId) {
+  savePlan();
+  state.renderedTabs.weekly = false;
+  state.renderedTabs.shopping = false;
+  renderWeeklyPlan();
+  if (state.activeTab === 'shopping') renderShoppingList();
+  updateSummaryBadge();
+  updateCoreFlowSummary();
+  if (state.familySyncCode) pushSyncDayPlan(dayId);
+}
+function renderMealSwapStatus() {
+  const el = document.getElementById('meal-swap-status');
+  if (!el) return;
+  const u = mealSwapUndo;
+  const valid = u && state.weeklyPlan?.[u.dayId]?.[u.category] === u.next;
+  el.hidden = !valid;
+  el.innerHTML = valid ? `<span>${{main:'主菜',side:'副菜',soup:'汁物'}[u.category]}を変更しました</span><button type="button" onclick="undoSingleDish()">元に戻す</button>` : '';
+}
+window.swapSingleDish = function(dayId, category) {
+  if (!['main','side','soup'].includes(category) || !state.weeklyPlan?.[dayId]) return;
+  const old = state.weeklyPlan[dayId][category];
+  const key = dayId + ':' + category;
+  const history = mealSwapHistory.get(key) || [];
+  const used = new Set(Object.values(state.weeklyPlan).flatMap(d => [d.main,d.side,d.soup]));
+  let pool = RECIPES_DATA.filter(r => r && r.category === category && r.id !== old && !state.blacklistedRecipeIds.includes(r.id) &&
+    Array.from({length:state.childrenCount}, (_,i) => state.childrenPreferences['child'+(i+1)] || {dislikes:[],disabledFlavors:[]}).every(pref => canChildEat(r,pref)));
+  if (!pool.length) { showToast('条件に合う別の料理がありません'); return; }
+  // Prefer fresh alternatives, then recipes not already present in this week.
+  const fresh = pool.filter(r => !history.includes(r.id));
+  if (fresh.length) pool = fresh;
+  const unique = pool.filter(r => !used.has(r.id));
+  if (unique.length) pool = unique;
+  const oldCost = Number(getRecipeById(old)?.approxCostPerPerson) || 0;
+  const total = Object.values(state.weeklyPlan).reduce((sum,d) => sum + ['main','side','soup'].reduce((n,c) => n + (Number(getRecipeById(d[c])?.approxCostPerPerson)||0) * state.servings,0),0);
+  const within = pool.filter(r => total + (r.approxCostPerPerson-oldCost)*state.servings <= state.targetBudget);
+  if (within.length) pool = within;
+  else { const cheapest = Math.min(...pool.map(r=>r.approxCostPerPerson)); pool = pool.filter(r=>r.approxCostPerPerson===cheapest); }
+  const next = pool[Math.floor(Math.random()*pool.length)].id;
+  mealSwapHistory.set(key, [...history,old].slice(-12));
+  state.weeklyPlan[dayId][category] = next;
+  mealSwapUndo = {dayId,category,old,next};
+  commitMealSwap(dayId);
+  renderMealSwapStatus();
+  const newTotal = total + ((Number(getRecipeById(next)?.approxCostPerPerson)||0)-oldCost)*state.servings;
+  if (newTotal > state.targetBudget) showToast('料理を変更しました。週の目安金額が予算を超えています');
+};
+window.undoSingleDish = function() {
+  const u = mealSwapUndo;
+  if (!u || state.weeklyPlan?.[u.dayId]?.[u.category] !== u.next) { mealSwapUndo=null;renderMealSwapStatus();return; }
+  state.weeklyPlan[u.dayId][u.category] = u.old;
+  mealSwapUndo = null;
+  commitMealSwap(u.dayId);
+  renderMealSwapStatus();
+  showToast('元の料理に戻しました');
+};
 
 window.shuffleDayMenu = function(dayId) {
   const isNotBlacklisted = r => !state.blacklistedRecipeIds.includes(r.id);
@@ -4920,3 +4977,4 @@ function setupUniversalNavigation() {
     else setAppScreen(screen,false);
   });
 }
+

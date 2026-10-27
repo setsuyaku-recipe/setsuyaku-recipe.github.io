@@ -848,6 +848,33 @@
     body .ud-to-shopping { min-height:48px;font-size:16px; }
     @media(max-width:360px) { .balanced-dish-open .ud-dish-title { font-size:17px; } }
 
+
+/* Collectible-menu cards: approved chamfered double frame. */
+body[data-screen="weekly"]{background:#faf9f4;color:#242a30}
+body[data-screen="weekly"] .ud-workspace h1{font-size:23px;font-weight:700;margin:0 0 5px}
+body #weekly-plan-container [id^="swipe-card-"]{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0;max-width:none}
+body #weekly-plan-container [id^="swipe-day-tab-"]{position:relative;min-width:0;min-height:72px;padding:7px 0 5px;background:#fffdf7!important;color:#252b31!important;border:1px solid #bebeb2!important;border-radius:7px;box-shadow:0 3px 0 #deded5!important;outline:1px solid #deded5;outline-offset:-4px}
+body #weekly-plan-container [id^="swipe-day-tab-"][data-selected="true"]{background:#326f56!important;color:white!important;border:2px solid #326f56!important;outline-color:#f7faf4;box-shadow:0 3px 0 #b8c9bc!important}
+body #weekly-plan-container [id^="swipe-day-tab-"] span:first-child{font-size:23px;font-weight:700;line-height:1.1}
+.meal-weekday-caption{font-size:10px;line-height:1.4;margin-top:3px}.meal-day-check{font-size:10px;line-height:12px;height:12px}
+body #weekly-plan-container .bg-white\/95{background:transparent;border:0;box-shadow:none;padding:2px}
+body #btn-swipe-prev,body #btn-swipe-next{display:none}
+.reading-day-header{position:relative;background:transparent;border-radius:0;padding:12px 4px 8px;border-bottom:1px solid #d7d9cf;margin-bottom:8px;flex-wrap:wrap}
+.reading-day-header h2{font-size:23px;font-weight:700}.meal-day-cost{margin-left:auto;font-size:13px;white-space:nowrap}
+.reading-day-options{margin-left:auto}.reading-day-options>summary{font-size:11px;min-height:24px;padding:3px 0}.reading-day-options>div{max-width:calc(100vw - 40px)}
+body .weekly-dish.meal-card{--card:#48846a;--band:#376f57;display:block;position:relative;padding:5px!important;margin:0 0 9px;border:0!important;border-radius:0!important;background:var(--card)!important;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)}
+body .weekly-dish-side.meal-card{--card:#c28d36;--band:#946b29}body .weekly-dish-soup.meal-card{--card:#54809a;--band:#406b83}
+.meal-card:before{content:"";position:absolute;inset:3px;border:1px solid #fffdf7;pointer-events:none;z-index:1;clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px)}
+.meal-card-band{display:flex;align-items:center;gap:12px;background:var(--band);color:#fff;padding:5px 12px;font-size:17px;font-weight:650;min-height:32px}.meal-band-rule{height:1px;background:#ffffff99;flex:1;margin-left:5px}.meal-card-band>span:first-child{font-size:22px;font-weight:400}
+.meal-card-body{background:#fffef9;padding:12px 14px 10px}.meal-card-body h3{margin:0;font-size:19px;line-height:1.4;font-weight:650}.meal-title-prefix{display:block;font-size:16px;margin-bottom:3px;font-weight:550}.meal-title{display:block;text-align:left;width:100%;font:inherit;color:#222a2c;overflow-wrap:anywhere;background:none;border:0;padding:0;min-height:32px}.weekly-dish-main .meal-title{font-size:23px;font-weight:700}.meal-description{font-size:13px;line-height:1.5;border-top:1px solid #d8ddd4;margin:9px 0 0;padding-top:8px;color:#3f4845}
+.meal-card-actions{display:grid;grid-template-columns:.8fr 1.2fr;background:#fffef9;border-top:1px solid var(--card);padding:3px 0}.meal-card-actions button{min-height:44px;padding:5px 8px;text-align:center;font-size:13px;font-weight:550;line-height:1.3;color:#285c47;display:flex;justify-content:center;align-items:center;gap:8px;background:none;border:0}.meal-card-actions button+button{border-left:1px solid #d3d8d1;color:#28342e}.meal-card-actions button+button span{font-size:25px;color:#326f56;line-height:1}
+.meal-extras{background:#fffef9;padding:0 10px;color:#566258;font-size:11px}.meal-extras summary{min-height:24px;cursor:pointer;padding:3px 0}.meal-extras>div{display:flex;flex-wrap:wrap;gap:4px}.meal-extras button{min-height:44px;padding:6px;border:1px solid #ccd4c9;background:#fffef9;border-radius:4px}
+#meal-swap-status{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;padding:8px 4px;margin-top:8px;border-top:1px solid #d5dbd2}#meal-swap-status button{min-height:44px;text-decoration:underline;color:#285c47;font-weight:600}
+body .ud-to-shopping{background:#326f56;color:white;border-radius:7px;font-size:16px;min-height:48px}
+body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summary:focus-visible{outline:3px solid #112e52!important;outline-offset:3px}
+@media(max-width:360px){.meal-card-actions button{font-size:12px;padding:5px 3px;gap:3px}.meal-card-body{padding:10px}.weekly-dish-main .meal-title{font-size:21px}.meal-card-body h3{font-size:18px}}
+@media(prefers-reduced-motion:reduce){#weekly-plan-container *{transition:none!important;scroll-behavior:auto!important}}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1011,7 +1038,7 @@
       <div id="weekly-plan-container">
         <!-- JSで動的レンダリング -->
       </div>
-      <button type="button" class="ud-primary ud-to-shopping" onclick="goToAppTab('shopping')">買い物リストへ <span aria-hidden="true">›</span></button>
+      <button type="button" class="ud-primary ud-to-shopping" onclick="goToAppTab('shopping')">買い物リストを見る <span aria-hidden="true">›</span></button><div id="meal-swap-status" role="status" aria-live="polite" hidden></div>
     </section>
 
     <!-- ================= 2. 買い物リストタブ ================= -->
@@ -1670,14 +1697,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_balanced_meal_typography"></script>
-  <script src="app.js?v=20261027_balanced_meal_typography"></script>
+  <script src="recipes.js?v=20261027_menu_cards"></script>
+  <script src="app.js?v=20261027_menu_cards"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_balanced_meal_typography', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_menu_cards', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();
@@ -1710,4 +1737,5 @@
 </body>
 
 </html>
+
 

@@ -821,6 +821,33 @@
     body #weekly-plan-container [id^="swipe-day-tab-"] { min-height:48px; }
     @media(max-width:360px) { .ud-dish-title { font-size:20px; } }
 
+
+    /* A readable menu: meaningful dish names, moderate type and a consistent reading edge. */
+    body[data-screen="weekly"] .ud-workspace h1 { font-size:21px;font-weight:650;text-align:left;margin:4px 0 8px; }
+    body[data-screen="weekly"] .ud-meal-context { font-size:14px;line-height:1.5; }
+    body[data-screen="weekly"] .ud-workspace { padding-top:4px;padding-bottom:8px; }
+    body[data-screen="weekly"] .ud-home-back { font-size:14px; }
+    .reading-day-header { padding:4px 12px;background:#f0f3eb; }
+    .reading-day-header h2 { font-size:16px;font-weight:600; }
+    .reading-day-options>summary { font-size:12px; }
+    body .weekly-dish { position:relative;padding:8px 8px 12px !important; }
+    .balanced-dish-top { display:flex;align-items:center;gap:8px;min-height:32px;padding-right:44px; }
+    .balanced-dish-label { font-size:12px;line-height:1.5;font-weight:500;color:#47604b;background:#edf2e7;border-radius:5px;padding:2px 7px; }
+    .weekly-dish-side .balanced-dish-label { background:#f3eedf;color:#695a38; }
+    .weekly-dish-soup .balanced-dish-label { background:#eaf0f0;color:#3f6061; }
+    .balanced-cooktime { font-size:12px;font-weight:400;line-height:1.5;color:#5e685a; }
+    .balanced-dish-top .ud-dish-more { position:absolute;right:0;top:2px;width:44px; }
+    .balanced-dish-top .ud-dish-more>summary { width:44px;height:44px;min-height:44px;font-size:20px; }
+    .balanced-dish-open { display:block;width:100%;padding:0;min-height:48px; }
+    .balanced-dish-open::after { content:none; }
+    .balanced-dish-open .ud-dish-title { display:block;font-size:18px;font-weight:550;line-height:1.65;letter-spacing:0;color:#263d31;padding:0;overflow-wrap:anywhere;word-break:normal; }
+    .balanced-recipe-link { display:block;text-align:right;color:#4d6955;font-size:12px;font-weight:400;line-height:1.5;margin-top:3px; }
+    body #weekly-plan-container .p-2 { padding-top:2px;padding-bottom:2px; }
+    body #weekly-plan-container [id^="swipe-day-tab-"] { font-weight:500; }
+    body #weekly-plan-container [id^="swipe-day-tab-"] span:first-child { font-size:14px; }
+    body .ud-to-shopping { min-height:48px;font-size:16px; }
+    @media(max-width:360px) { .balanced-dish-open .ud-dish-title { font-size:17px; } }
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1643,14 +1670,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_readable_daily_menu"></script>
-  <script src="app.js?v=20261027_readable_daily_menu"></script>
+  <script src="recipes.js?v=20261027_balanced_meal_typography"></script>
+  <script src="app.js?v=20261027_balanced_meal_typography"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_readable_daily_menu', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_balanced_meal_typography', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

@@ -2821,17 +2821,14 @@ function renderWeeklyPlan() {
 
 // Short reading labels affect only this overview; the recipe itself keeps its full name.
 function getMealReadingName(recipe) {
-  let title = getCleanTitle(recipe);
-  if (/つくね/.test(title)) title = /照り焼/.test(title) ? '照り焼きつくね' : 'つくね';
-  else if (/ハンバーグ/.test(title)) title = /煮込み/.test(title) ? '煮込みハンバーグ' : /チーズ/.test(title) ? 'チーズハンバーグ' : 'ハンバーグ';
-  else if (/みそ汁|味噌汁|お味噌汁/.test(title)) title = 'みそ汁';
-  else if (/(ネギ|ねぎ)/.test(title) && /焼/.test(title) && /味噌|みそ/.test(title)) title = '焼きねぎ';
-  else title = title.replace(/ふんわり|とろとろ|定番の?|たっぷり|しっとり|やわらか|お手軽|簡単[！!]?/g, '').trim();
-  const foods = (recipe.ingredients || []).filter(i => !/調味料|油・|香辛料/.test(i.aisle || '') &&
-    !/^(水|お湯|塩|砂糖|しょうゆ|醤油|みりん|酒|料理酒|油|サラダ油|ごま油|こしょう|片栗粉|小麦粉|味噌|みそ|だし|和風だし)/.test(i.name || ''))
-    .slice(0, 2).map(i => String(i.name || '').replace(/[（(].*?[）)]/g, '').trim()).filter(Boolean);
-  const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  return { title: escape(title), ingredients: foods.map(escape).join('・') };
+  const original = getCleanTitle(recipe);
+  // Remove promotional wording only. Keep foods, seasoning and cooking method together.
+  let title = original.replace(/ふんわり|とろとろ|定番の?|お手軽|簡単[！!]?/g, '').trim();
+  if (original === '鶏ひき肉と豆腐のふんわり照り焼きつくね') title = '鶏ひき肉と豆腐の照り焼きつくね';
+  if (original === '長ネギのとろとろ焼きネギ味噌') title = '長ねぎのみそ焼き';
+  title = title.replace(/お味噌汁|味噌汁/g, 'みそ汁');
+  const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return { title: escape(title), ingredients: '' };
 }
 
 function renderDishRow(dayId, category, recipe, label) {
@@ -2886,7 +2883,8 @@ function renderDishRow(dayId, category, recipe, label) {
   const reading = getMealReadingName(recipe);
   return `
     <div class="weekly-dish weekly-dish-${category}">
-      <div class="reading-row-heading"><span class="ud-dish-label">${label}</span>
+      <div class="balanced-dish-top"><span class="balanced-dish-label">${label}</span>
+        ${category === 'main' ? `<span class="balanced-cooktime">目安 ${recipe.time}</span>` : ''}
         <details class="ud-dish-more"><summary title="変更・その他" aria-label="${label}の変更・その他">…</summary>
           <div class="ud-dish-menu"><button type="button" onclick="openChangeModal('${dayId}', '${category}')">料理を変更</button>
             <button type="button" onclick="toggleFavorite('${recipe.id}',event)">${state.favoriteRecipeIds.includes(recipe.id) ? '★ お気に入り解除' : '☆ お気に入り'}</button>
@@ -2894,12 +2892,9 @@ function renderDishRow(dayId, category, recipe, label) {
           </div>
         </details>
       </div>
-      <div class="ud-dish-line">
-        ${category === 'main' ? `<div class="weekly-main-visual">${getRecipeVisual(recipe)}</div>` : ''}
-        <div class="ud-dish-content"><h3 class="ud-dish-heading"><button type="button" class="ud-dish-open" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">
-          <span class="ud-dish-title">${reading.title}</span><span class="reading-ingredients">${reading.ingredients}</span>
-        </button></h3></div>
-      </div>${altHtml}
+      <h3 class="ud-dish-heading"><button type="button" class="ud-dish-open balanced-dish-open" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">
+        <span class="ud-dish-title">${reading.title}</span><span class="balanced-recipe-link">作り方 <span aria-hidden="true">›</span></span>
+      </button></h3>${altHtml}
     </div>
   `;
 }
@@ -4872,6 +4867,8 @@ function openMealScreen() {
   const configured = localStorage.getItem(UD_SETUP_KEY) === 'true' ||
     (localStorage.getItem(STORAGE_KEY_PLAN) && localStorage.getItem(STORAGE_KEY_BUDGET));
   if (!configured || !state.weeklyPlan) return openMealSetup();
+  state.weeklyViewMode = 'swipe';
+  state.renderedTabs.weekly = false;
   setAppScreen('weekly');
 }
 window.openMealScreen = openMealScreen;

@@ -154,6 +154,11 @@ function getExternalBadge(recipe) {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     loadSavedState();
+    if (!localStorage.getItem('frugal_daily_reading_view_v1')) {
+      state.weeklyViewMode = 'swipe';
+      localStorage.setItem(STORAGE_KEY_WEEKLY_VIEW_MODE, 'swipe');
+      localStorage.setItem('frugal_daily_reading_view_v1', 'true');
+    }
     state.lastSyncTime = Number(localStorage.getItem('frugal_sync_time_' + state.familySyncCode)) || 0;
     const sharedSnapshot = state.pendingShareData;
     if (sharedSnapshot) {
@@ -2713,37 +2718,14 @@ function renderWeeklyPlan() {
         <div id="swipe-card-${day.id}" class="rounded-2xl border transition-all overflow-hidden bg-white shadow-2xs flex flex-col ${
           isCooked ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-sky-100/90 hover:border-sky-200'
         } ${isSwipeMode ? 'shrink-0 w-full max-w-md mx-auto' : ''}">
-          <!-- 曜日ヘッダー（縦幅スリム設計） -->
-          <div class="px-3 py-1.5 sm:px-4 sm:py-2 border-b border-sky-100 flex items-center justify-between flex-wrap gap-1.5 ${dayBg}">
-            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-              <label class="inline-flex items-center gap-1 cursor-pointer bg-white/95 px-1.5 py-0.2 rounded-md border ${
-                isChecked ? 'border-teal-300 text-teal-900 shadow-2xs' : 'border-slate-300 text-slate-400 opacity-80'
-              } transition-all hover:bg-white select-none active:scale-95 shrink-0" title="チェックを外すとこの日の食材が買い物リストから除外されます">
-                <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-3 h-3 text-teal-600 rounded border-slate-300 focus:ring-teal-400 cursor-pointer" onchange="toggleShoppingDay('${day.id}')">
-                <span class="text-[10px] font-black">${isChecked ? 'リスト反映' : '除外中'}</span>
-              </label>
-              <span class="text-xs sm:text-sm font-black shrink-0">${theme.name}</span>
-              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-md font-bold bg-white/90 border border-current shadow-2xs whitespace-nowrap">
-                ${state.servings}人分 約¥${dayCost * state.servings}
-              </span>
-              ${isCooked ? `<span class="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded-md shadow-2xs">✅ 調理済</span>` : ''}
-            </div>
-
-            <div class="flex items-center gap-1 ml-auto shrink-0">
-              <button onclick="toggleCookedDay('${day.id}')" class="text-[11px] flex items-center gap-0.5 font-black px-2 py-0.5 rounded-lg transition-all shadow-2xs active:scale-95 ${
-                isCooked ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-white/90 text-teal-900 hover:bg-teal-50 border border-teal-200'
-              }" title="作った記録">
-                <i data-lucide="${isCooked ? 'check-circle' : 'utensils'}" class="w-3 h-3"></i>
-                <span>${isCooked ? '調理済' : '🍳 作った！'}</span>
-              </button>
-              <button onclick="shuffleDayMenu('${day.id}')" class="text-[11px] flex items-center gap-0.5 font-bold p-1 rounded-lg bg-white/90 text-slate-600 shadow-2xs hover:bg-white" title="この日のメニューをランダム変更">
-                <i data-lucide="shuffle" class="w-3 h-3"></i>
-              </button>
-            </div>
+          <div class="reading-day-header"><h2>${day.name.replace(/^[^月火水木金土日]*([月火水木金土日]曜日).*$/, '$1')}</h2>
+            <details class="reading-day-options"><summary>この日の設定</summary><div>
+              <span>${state.servings}人分 約¥${dayCost * state.servings}</span>
+              <label><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShoppingDay('${day.id}')">買い物リストに入れる</label>
+              <button type="button" onclick="toggleCookedDay('${day.id}')">${isCooked ? '調理済みを解除' : '作ったことを記録'}</button>
+              <button type="button" onclick="shuffleDayMenu('${day.id}')">この日の献立を変更</button>
+            </div></details>
           </div>
-
-          <!-- 主菜食材バナー（肉・魚・豆腐が一目でわかる！） -->
-          
 
           <!-- 3品一覧エリア（スマホでスクロール不要で1画面に収まるスリムレイアウト） -->
           <div class="p-2 sm:p-2.5 flex-1 flex flex-col gap-1.5 ${isCooked ? 'bg-emerald-50/20' : ''}">
@@ -2836,6 +2818,22 @@ function renderWeeklyPlan() {
   safeCreateIcons();
 }
 
+
+// Short reading labels affect only this overview; the recipe itself keeps its full name.
+function getMealReadingName(recipe) {
+  let title = getCleanTitle(recipe);
+  if (/つくね/.test(title)) title = /照り焼/.test(title) ? '照り焼きつくね' : 'つくね';
+  else if (/ハンバーグ/.test(title)) title = /煮込み/.test(title) ? '煮込みハンバーグ' : /チーズ/.test(title) ? 'チーズハンバーグ' : 'ハンバーグ';
+  else if (/みそ汁|味噌汁|お味噌汁/.test(title)) title = 'みそ汁';
+  else if (/(ネギ|ねぎ)/.test(title) && /焼/.test(title) && /味噌|みそ/.test(title)) title = '焼きねぎ';
+  else title = title.replace(/ふんわり|とろとろ|定番の?|たっぷり|しっとり|やわらか|お手軽|簡単[！!]?/g, '').trim();
+  const foods = (recipe.ingredients || []).filter(i => !/調味料|油・|香辛料/.test(i.aisle || '') &&
+    !/^(水|お湯|塩|砂糖|しょうゆ|醤油|みりん|酒|料理酒|油|サラダ油|ごま油|こしょう|片栗粉|小麦粉|味噌|みそ|だし|和風だし)/.test(i.name || ''))
+    .slice(0, 2).map(i => String(i.name || '').replace(/[（(].*?[）)]/g, '').trim()).filter(Boolean);
+  const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return { title: escape(title), ingredients: foods.map(escape).join('・') };
+}
+
 function renderDishRow(dayId, category, recipe, label) {
   if (!recipe) return '';
 
@@ -2885,21 +2883,22 @@ function renderDishRow(dayId, category, recipe, label) {
     `).join('');
   }
 
+  const reading = getMealReadingName(recipe);
   return `
     <div class="weekly-dish weekly-dish-${category}">
-      <div class="ud-dish-line">
-        ${category === 'main' ? `<div class="weekly-main-visual">${getRecipeVisual(recipe)}</div>` : ''}
-        <div class="ud-dish-content"><span class="ud-dish-label">${label}</span>
-          <h3 class="ud-dish-heading"><button type="button" class="ud-dish-open" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">
-            <span class="ud-dish-title">${cleanTitle}</span><span class="ud-dish-read">作り方を見る <span aria-hidden="true">›</span></span>
-          </button></h3>
-        </div>
+      <div class="reading-row-heading"><span class="ud-dish-label">${label}</span>
         <details class="ud-dish-more"><summary title="変更・その他" aria-label="${label}の変更・その他">…</summary>
           <div class="ud-dish-menu"><button type="button" onclick="openChangeModal('${dayId}', '${category}')">料理を変更</button>
             <button type="button" onclick="toggleFavorite('${recipe.id}',event)">${state.favoriteRecipeIds.includes(recipe.id) ? '★ お気に入り解除' : '☆ お気に入り'}</button>
             <button type="button" onclick="toggleBlacklist('${recipe.id}',event)">献立から除外</button>
           </div>
         </details>
+      </div>
+      <div class="ud-dish-line">
+        ${category === 'main' ? `<div class="weekly-main-visual">${getRecipeVisual(recipe)}</div>` : ''}
+        <div class="ud-dish-content"><h3 class="ud-dish-heading"><button type="button" class="ud-dish-open" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">
+          <span class="ud-dish-title">${reading.title}</span><span class="reading-ingredients">${reading.ingredients}</span>
+        </button></h3></div>
       </div>${altHtml}
     </div>
   `;

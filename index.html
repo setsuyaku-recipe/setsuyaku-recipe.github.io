@@ -794,6 +794,33 @@
     body .ud-to-shopping { min-height:52px;font-size:17px;padding:10px 16px;background:#edf2e7;border:1px solid #cbd8c4;color:#245b46; }
     @media(min-width:640px) { .ud-dish-title { font-size:20px; } }
 
+
+    /* Separate the name, ingredients, and infrequent controls into distinct layers. */
+    body[data-screen="weekly"] .ud-workspace h1 { font-size:22px;margin:0 0 6px; }
+    body[data-screen="weekly"] .ud-home-back { min-height:44px; }
+    body[data-screen="weekly"] .ud-workspace { padding-bottom:4px; }
+    .reading-day-header { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;background:#f0f2e8;border-radius:20px 20px 0 0; }
+    .reading-day-header h2 { font-size:19px;font-weight:700;margin:0; }
+    .reading-day-options { position:relative;font-size:13px;color:#50644e; }
+    .reading-day-options>summary { cursor:pointer;min-height:44px;padding:12px 0; }
+    .reading-day-options>div { position:absolute;right:0;top:100%;min-width:240px;z-index:25;padding:12px;background:#fffdf8;border:1px solid #d8dfd1;border-radius:12px;box-shadow:0 6px 20px #173f3320;display:grid;gap:8px; }
+    .reading-day-options label,.reading-day-options button { display:flex;align-items:center;gap:8px;min-height:48px;font-size:15px;text-align:left; }
+    .reading-day-options input { width:22px;height:22px; }
+    body .weekly-dish { padding:4px 10px 16px !important; }
+    .reading-row-heading { display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px; }
+    .reading-row-heading .ud-dish-label { margin:0;font-size:13px; }
+    .reading-row-heading .ud-dish-more { align-self:center;flex-basis:48px; }
+    .reading-row-heading .ud-dish-more>summary { min-height:44px;height:44px;font-size:22px; }
+    .ud-dish-title { font-size:22px;line-height:1.45;letter-spacing:.02em;font-weight:700;word-break:normal; }
+    .reading-ingredients { display:block;color:#52644f;font-size:14px;line-height:1.6;margin-top:5px;font-weight:400;overflow-wrap:anywhere; }
+    .ud-dish-open { min-height:52px;padding:0 0 2px; }
+    .ud-dish-open::after { content:'›';font-size:20px;color:#71836e;float:right;margin-top:-28px; }
+    .ud-dish-open .ud-dish-title,.ud-dish-open .reading-ingredients { padding-right:14px; }
+    body .weekly-main-visual { flex-basis:54px;width:54px;height:54px; }
+    body .weekly-dish-side .ud-dish-line,body .weekly-dish-soup .ud-dish-line { padding-left:0; }
+    body #weekly-plan-container [id^="swipe-day-tab-"] { min-height:48px; }
+    @media(max-width:360px) { .ud-dish-title { font-size:20px; } }
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1616,14 +1643,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_meal_names_first"></script>
-  <script src="app.js?v=20261027_meal_names_first"></script>
+  <script src="recipes.js?v=20261027_readable_daily_menu"></script>
+  <script src="app.js?v=20261027_readable_daily_menu"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_meal_names_first', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_readable_daily_menu', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

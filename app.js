@@ -3154,9 +3154,23 @@ function calculateAggregatedShoppingList() {
   return result;
 }
 function formatShoppingAmount(item) {
-  if (!item.measures) return formatAmount(item.amount,item.unit);
-  return Object.entries(item.measures).map(([unit,amount]) => formatAmount(amount,unit)).join(' ＋ ');
+  const measures = item.measures || {[item.unit]:item.amount};
+  const name = canonicalShoppingName(item.name);
+  // Explicit purchase-size assumptions; recipe quantities remain unchanged.
+  const tofu = /^(木綿豆腐|絹豆腐|絹ごし豆腐|豆腐)$/.test(name);
+  const purchase = tofu ? {unit:'丁',grams:300} : name === '人参' ? {unit:'本',grams:150} : null;
+  if (purchase && Object.keys(measures).every(u => ['g',purchase.unit].includes(u))) {
+    const count = (Number(measures[purchase.unit]) || 0) + (Number(measures.g) || 0) / purchase.grams;
+    return `約 ${Math.ceil(count - 1e-9)}${purchase.unit}${measures.g ? `（1${purchase.unit}${purchase.grams}g換算）` : ''}`;
+  }
+  return Object.entries(measures).map(([unit,amount]) => {
+    if (['個','本','枚','袋','株','缶','束','切れ','玉','丁','片','かけ'].includes(unit)) {
+      return `約 ${Math.ceil(amount - 1e-9)}${unit === 'かけ' ? '片' : unit}`;
+    }
+    return formatAmount(amount,unit);
+  }).join(' ／ ');
 }
+
 function isShoppingItemChecked(key, item) {
   if (Object.prototype.hasOwnProperty.call(state.checkedItems,key)) return !!state.checkedItems[key];
   // Preserve earlier checks only when every component had been checked.
@@ -5019,5 +5033,6 @@ function setupUniversalNavigation() {
     else setAppScreen(screen,false);
   });
 }
+
 
 

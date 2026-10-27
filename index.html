@@ -895,6 +895,9 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 :is(#modal-preferences,#modal-sync,#panel-shopping) :focus-visible{outline:3px solid #234f3e;outline-offset:3px}
 
     #dislike-category-grid .cat-btn>span:first-child{display:none}
+.ud-home-mascot{display:block;flex-shrink:0;width:76px;height:76px;object-fit:contain;margin:0 auto 10px;border-radius:18px}
+.ud-home{padding-top:clamp(16px,3vh,28px)}
+@media(max-height:740px){.ud-home-mascot{width:60px;height:60px;margin-bottom:6px}.ud-home-budget{margin-bottom:16px}.ud-home-links{padding-top:20px}.ud-tile{min-height:140px}}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -904,11 +907,11 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 
 
   <section id="ud-home" class="ud-home" aria-labelledby="ud-home-title">
-    <h1 id="ud-home-title">週ぎめごはん</h1><p id="ud-home-budget" class="ud-home-budget"></p>
+    <img class="ud-home-mascot" src="icons/icon-192.png" width="76" height="76" alt="週ぎめごはんのごはん茶碗キャラクター" decoding="async"><h1 id="ud-home-title">週ぎめごはん</h1><p id="ud-home-budget" class="ud-home-budget"></p>
     <div class="ud-home-grid">
 <button type="button" class="ud-tile ud-tile-meal" onclick="openMealScreen()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="31" fill="#f6b587"/><circle cx="50" cy="50" r="24" fill="none" stroke="#fffaf2" stroke-width="4"/><path d="M10 24v23m-5-23v14q0 10 10 10m5-24v14q0 10-10 10v28M88 23v53m0-53q-13 16 0 31" fill="none" stroke="#245746" stroke-width="4" stroke-linecap="round"/></svg><span>献立</span></button>
 <button type="button" class="ud-tile ud-tile-shop" onclick="goToAppTab('shopping')"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M12 20h12l11 45h42l12-34H29" fill="#ec9862" stroke="#ec9862" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="42" cy="80" r="7" fill="#ec9862"/><circle cx="74" cy="80" r="7" fill="#ec9862"/></svg><span>買い物</span></button>
-<button type="button" class="ud-tile ud-tile-child" onclick="openPreferencesModal(false)"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M23 45q-6-30 27-30t27 30" fill="#245746"/><path d="M25 42q-13-2-10 13 2 8 11 7 5 24 24 24t24-24q9 1 11-7 3-15-10-13" fill="#f4c49d" stroke="#245746" stroke-width="4"/><path d="M25 42q14-3 22-21 7 15 28 21" fill="#245746"/><circle cx="37" cy="51" r="3" fill="#245746"/><circle cx="63" cy="51" r="3" fill="#245746"/><path d="M40 67q10 9 20 0" fill="none" stroke="#245746" stroke-width="4" stroke-linecap="round"/></svg><span>苦手食材</span></button>
+<button type="button" class="ud-tile ud-tile-child" onclick="openPreferencesModal(false)"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="42" fill="#fff0e5"/><path d="M29 67q21-12 42 0l7 23H22Z" fill="#e99c78"/><circle cx="24" cy="45" r="7" fill="#f4c7a2"/><circle cx="76" cy="45" r="7" fill="#f4c7a2"/><path d="M25 35q0-24 25-24t25 24v16q0 24-25 24T25 51Z" fill="#f6d4b4"/><path d="M25 40q-5-28 23-29 30-1 27 29l-9-10-9 3-8-9-11 10-11-1Z" fill="#5f5146"/><circle cx="39" cy="46" r="3" fill="#3c4539"/><circle cx="61" cy="46" r="3" fill="#3c4539"/><path d="M43 58q7 6 14 0" fill="none" stroke="#8f5548" stroke-width="3" stroke-linecap="round"/><ellipse cx="32" cy="54" rx="5" ry="3" fill="#edac99"/><ellipse cx="68" cy="54" rx="5" ry="3" fill="#edac99"/></svg><span>苦手食材</span></button>
 <button type="button" class="ud-tile ud-tile-family" onclick="openSyncModal()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="26" r="14" fill="#245746"/><path d="M29 75V57q0-18 21-18t21 18v18" fill="#245746"/><circle cx="20" cy="51" r="11" fill="#85a68a"/><path d="M4 88V76q0-15 16-15t16 15v12" fill="#85a68a"/><circle cx="81" cy="49" r="11" fill="#ed9e6d"/><path d="M65 88V74q0-15 16-15t16 15v14" fill="#ed9e6d"/></svg><span>家族共有</span></button>
 </div><div class="ud-home-links"><button type="button" onclick="openGuideModal()"><span aria-hidden="true">ⓘ</span> 使い方</button><button type="button" onclick="setAppScreen('settings')"><span aria-hidden="true">⚙</span> 設定</button></div></section>
   <header id="ud-workspace" class="ud-workspace" hidden>
@@ -1063,7 +1066,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 
     <!-- ================= 2. 買い物リストタブ ================= -->
     <section id="panel-shopping" role="tabpanel" aria-labelledby="tab-shopping" tabindex="0" class="tab-content hidden" hidden>
-      <p id="shopping-budget-remaining" class="shopping-budget-note"></p><p class="shopping-quantity-note">同じ食材は１行に集計。単位が異なる量は「＋」で表示します。</p>
+      <p id="shopping-budget-remaining" class="shopping-budget-note"></p><p class="shopping-quantity-note">買う量の目安です。人参は1本150g、豆腐は1丁300gで換算。商品の大きさに合わせて調整してください。</p>
       <!-- 最上段：買い物タイトル＆即座に操作できるスリムバー（スクロール不要で食材リスト直撃） -->
       <div class="mb-2 sm:mb-2.5 flex items-center justify-between gap-2 flex-wrap bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div class="flex items-center gap-2">
@@ -1718,14 +1721,14 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_subscreen_polish"></script>
-  <script src="app.js?v=20261027_subscreen_polish"></script>
+  <script src="recipes.js?v=20261027_intuitive_quantities"></script>
+  <script src="app.js?v=20261027_intuitive_quantities"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_subscreen_polish', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_intuitive_quantities', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();
@@ -1758,6 +1761,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 </body>
 
 </html>
+
 
 
 

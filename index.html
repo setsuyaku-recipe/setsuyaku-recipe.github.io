@@ -763,6 +763,37 @@
     @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important;transition:none !important;scroll-behavior:auto !important; } }
     @media print { #ud-home,#ud-workspace,#ud-setup,#ud-settings { display:none !important; } }
 
+
+    /* Meal names lead; secondary controls are visually quiet. */
+    body #weekly-swipe-slider,body [id^="swipe-card-"] { overflow:visible; }
+    body[data-screen="weekly"] .ud-workspace { padding-top:8px;padding-bottom:8px; }
+    body[data-screen="weekly"] .ud-workspace h1 { font-size:24px;margin:6px 0 10px; }
+    body[data-screen="weekly"] .ud-meal-context { font-size:15px; }
+    body[data-screen="weekly"] .ud-meal-context button { border:0;background:none;padding:0 10px;font-size:14px;text-decoration:underline;text-underline-offset:4px; }
+    body .weekly-dish { padding:12px 8px !important;overflow:visible; }
+    body .weekly-dish-main { min-height:0; }
+    .ud-dish-line { align-items:center;gap:10px; }
+    .ud-dish-content { min-width:0; }
+    .ud-dish-label { font-size:13px;margin-bottom:2px;color:#596950; }
+    .ud-dish-heading { margin:0;font-size:inherit; }
+    .ud-dish-open { display:block;width:100%;min-height:48px;border:0;padding:2px 0;background:none;color:#243b31;text-align:left;border-radius:6px; }
+    .ud-dish-open:hover .ud-dish-title { text-decoration:underline;text-underline-offset:4px; }
+    .ud-dish-title { display:block;font-size:19px;font-weight:750;line-height:1.5;margin:0;overflow-wrap:anywhere; }
+    .ud-dish-read { display:block;font-size:13px;line-height:1.5;color:#4e6756;font-weight:400;margin-top:4px; }
+    .ud-dish-more { flex:0 0 48px;position:relative;margin:0;align-self:center; }
+    .ud-dish-more>summary { display:flex;align-items:center;justify-content:center;list-style:none;min-height:48px;width:48px;padding:0;border:0;border-radius:50%;background:none;color:#536b5b;font-size:24px;cursor:pointer; }
+    .ud-dish-more>summary::-webkit-details-marker { display:none; }
+    .ud-dish-more>summary::marker { content:''; }
+    .ud-dish-more[open]>summary { background:#e9eddf; }
+    .ud-dish-menu { position:absolute;right:0;top:100%;width:200px;padding:6px;z-index:20;border:1px solid #d8dfd1;border-radius:12px;background:#fffdf8;box-shadow:0 6px 20px #173f3320; }
+    .ud-dish-menu button { width:100%;min-height:48px;padding:10px;text-align:left;border:0;background:none;color:#243b31;font-size:15px;border-radius:8px; }
+    .ud-dish-menu button:hover { background:#eef1e6; }
+    body .weekly-main-visual { flex:0 0 52px;width:52px;height:52px;border-radius:12px; }
+    body .weekly-main-visual .recipe-visual-plate { width:44px;height:44px;border-width:3px; }
+    body .weekly-main-visual .recipe-visual-plate span { font-size:28px; }
+    body .ud-to-shopping { min-height:52px;font-size:17px;padding:10px 16px;background:#edf2e7;border:1px solid #cbd8c4;color:#245b46; }
+    @media(min-width:640px) { .ud-dish-title { font-size:20px; } }
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1585,14 +1616,14 @@
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_simple_home_v2"></script>
-  <script src="app.js?v=20261027_simple_home_v2"></script>
+  <script src="recipes.js?v=20261027_meal_names_first"></script>
+  <script src="app.js?v=20261027_meal_names_first"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_simple_home_v2', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_meal_names_first', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

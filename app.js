@@ -2889,11 +2889,17 @@ function renderDishRow(dayId, category, recipe, label) {
     <div class="weekly-dish weekly-dish-${category}">
       <div class="ud-dish-line">
         ${category === 'main' ? `<div class="weekly-main-visual">${getRecipeVisual(recipe)}</div>` : ''}
-        <div class="ud-dish-content"><span class="ud-dish-label">${label}</span><h3 class="ud-dish-title">${cleanTitle}</h3>
-          <div class="ud-dish-actions"><button type="button" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">作り方</button><button type="button" onclick="openChangeModal('${dayId}', '${category}')" aria-label="${label}を変更">変更</button>
-            <details class="ud-dish-more"><summary aria-label="${cleanTitle}のその他の操作">…</summary><button type="button" onclick="toggleFavorite('${recipe.id}',event)">${state.favoriteRecipeIds.includes(recipe.id) ? '★ お気に入り解除' : '☆ お気に入り'}</button><button type="button" onclick="toggleBlacklist('${recipe.id}',event)">献立から除外</button></details>
-          </div>
+        <div class="ud-dish-content"><span class="ud-dish-label">${label}</span>
+          <h3 class="ud-dish-heading"><button type="button" class="ud-dish-open" onclick="openDetailModal('${recipe.id}')" aria-label="${cleanTitle}の作り方">
+            <span class="ud-dish-title">${cleanTitle}</span><span class="ud-dish-read">作り方を見る <span aria-hidden="true">›</span></span>
+          </button></h3>
         </div>
+        <details class="ud-dish-more"><summary title="変更・その他" aria-label="${label}の変更・その他">…</summary>
+          <div class="ud-dish-menu"><button type="button" onclick="openChangeModal('${dayId}', '${category}')">料理を変更</button>
+            <button type="button" onclick="toggleFavorite('${recipe.id}',event)">${state.favoriteRecipeIds.includes(recipe.id) ? '★ お気に入り解除' : '☆ お気に入り'}</button>
+            <button type="button" onclick="toggleBlacklist('${recipe.id}',event)">献立から除外</button>
+          </div>
+        </details>
       </div>${altHtml}
     </div>
   `;

@@ -875,6 +875,26 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 @media(max-width:360px){.meal-card-actions button{font-size:12px;padding:5px 3px;gap:3px}.meal-card-body{padding:10px}.weekly-dish-main .meal-title{font-size:21px}.meal-card-body h3{font-size:18px}}
 @media(prefers-reduced-motion:reduce){#weekly-plan-container *{transition:none!important;scroll-behavior:auto!important}}
 
+
+.ud-home h1{margin-bottom:10px}.ud-home-budget{text-align:center;color:#466052;font-size:15px;line-height:1.6;margin:0 0 26px}
+.shopping-budget-note{font-size:14px;color:#285c47;line-height:1.6;margin:0 0 6px}.shopping-quantity-note{font-size:12px;color:#60695f;margin:0 0 12px}
+:is(#modal-preferences,#modal-sync,#panel-shopping){color:#293b31}
+:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="bg-sky-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="bg-indigo-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="bg-teal-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="bg-cyan-"]{background-color:#edf2e8!important;background-image:none!important}
+:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="text-sky-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="text-indigo-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="text-teal-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="text-cyan-"]{color:#285b46!important}
+:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="border-sky-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="border-indigo-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="border-teal-"]{border-color:#d6dfd1!important}
+:is(#modal-preferences,#modal-sync,#panel-shopping) .text-white[class*="bg-teal-"],:is(#modal-preferences,#modal-sync,#panel-shopping) .text-white[class*="bg-indigo-"],:is(#modal-preferences,#modal-sync,#panel-shopping) .text-white[class*="bg-sky-"]{background:#326f56!important;color:#fff!important}
+:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="from-"],:is(#modal-preferences,#modal-sync,#panel-shopping) [class*="via-"]{background-image:none!important}
+:is(#modal-preferences,#modal-sync,#panel-shopping) button[class*="from-"]{background:#326f56!important;color:#fff!important}
+:is(#modal-preferences,#modal-sync,#panel-shopping) input[type="checkbox"]{accent-color:#326f56}
+:is(#modal-preferences,#modal-sync,#panel-shopping) button,:is(#modal-preferences,#modal-sync,#panel-shopping) label{word-break:keep-all;overflow-wrap:anywhere;line-height:1.5}
+.ud-tile span{word-break:keep-all;overflow-wrap:normal}
+#dislike-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}#dislike-category-grid .cat-btn{min-height:48px;padding:8px 6px;font-size:13px;flex-wrap:wrap}#dislike-category-grid .cat-btn>span{white-space:nowrap}
+#modal-preferences .grid-cols-2:has(#modal-children-count-select){grid-template-columns:1fr}
+#panel-shopping label:has(input[type="checkbox"]){gap:10px}#panel-shopping label>span:last-child{flex-shrink:0;text-align:right;max-width:55%;overflow-wrap:anywhere}
+#panel-shopping button,#panel-shopping label:has(input[type="checkbox"]){min-height:44px}
+:is(#modal-preferences,#modal-sync,#panel-shopping) :focus-visible{outline:3px solid #234f3e;outline-offset:3px}
+
+    #dislike-category-grid .cat-btn>span:first-child{display:none}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -884,7 +904,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 
 
   <section id="ud-home" class="ud-home" aria-labelledby="ud-home-title">
-    <h1 id="ud-home-title">週ぎめごはん</h1>
+    <h1 id="ud-home-title">週ぎめごはん</h1><p id="ud-home-budget" class="ud-home-budget"></p>
     <div class="ud-home-grid">
 <button type="button" class="ud-tile ud-tile-meal" onclick="openMealScreen()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="31" fill="#f6b587"/><circle cx="50" cy="50" r="24" fill="none" stroke="#fffaf2" stroke-width="4"/><path d="M10 24v23m-5-23v14q0 10 10 10m5-24v14q0 10-10 10v28M88 23v53m0-53q-13 16 0 31" fill="none" stroke="#245746" stroke-width="4" stroke-linecap="round"/></svg><span>献立</span></button>
 <button type="button" class="ud-tile ud-tile-shop" onclick="goToAppTab('shopping')"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M12 20h12l11 45h42l12-34H29" fill="#ec9862" stroke="#ec9862" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="42" cy="80" r="7" fill="#ec9862"/><circle cx="74" cy="80" r="7" fill="#ec9862"/></svg><span>買い物</span></button>
@@ -1043,6 +1063,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 
     <!-- ================= 2. 買い物リストタブ ================= -->
     <section id="panel-shopping" role="tabpanel" aria-labelledby="tab-shopping" tabindex="0" class="tab-content hidden" hidden>
+      <p id="shopping-budget-remaining" class="shopping-budget-note"></p><p class="shopping-quantity-note">同じ食材は１行に集計。単位が異なる量は「＋」で表示します。</p>
       <!-- 最上段：買い物タイトル＆即座に操作できるスリムバー（スクロール不要で食材リスト直撃） -->
       <div class="mb-2 sm:mb-2.5 flex items-center justify-between gap-2 flex-wrap bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div class="flex items-center gap-2">
@@ -1332,7 +1353,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
       <!-- シンプルヘッダー（文字の引き算） -->
       <div class="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-slate-100 shrink-0 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="text-xl">👶</span>
+          <i data-lucide="baby" class="w-6 h-6" aria-hidden="true"></i>
           <div class="flex items-center gap-2">
             <h3 id="modal-preferences-title" class="text-sm sm:text-base font-black text-slate-900 leading-tight">苦手な食材・味</h3>
             <span class="text-[10px] text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full font-bold">※アレルギー非対応</span>
@@ -1345,7 +1366,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 
       <!-- コンパクト人数設定 -->
       <div class="px-3.5 py-2 sm:px-5 sm:py-2.5 bg-slate-50/80 border-b border-slate-100 grid grid-cols-2 gap-2 shrink-0">
-        <div class="flex flex-col gap-1 bg-white p-2 rounded-xl border border-sky-100 shadow-2xs">
+        <div hidden>
           <label for="modal-servings-select" class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
             <span>👨‍👩‍👧‍👦</span> 家族の人数
           </label>
@@ -1362,7 +1383,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 
         <div class="flex flex-col gap-1 bg-white p-2 rounded-xl border border-amber-100 shadow-2xs">
           <label for="modal-children-count-select" class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-            <span>👶</span> お子様の人数
+            <span>👶</span> 設定する子どもの人数
           </label>
           <select id="modal-children-count-select" class="bg-amber-50/50 border border-amber-200 text-amber-950 font-black text-xs rounded-lg px-2 py-1 focus:ring-amber-400 cursor-pointer">
             <option value="0">0人（大人・夫婦のみ）</option>
@@ -1671,7 +1692,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl shrink-0">
-            👥
+            <i data-lucide="users" class="w-6 h-6" aria-hidden="true"></i>
           </div>
           <div>
             <h3 class="text-base font-black text-slate-900">家族共有（コード・QR）</h3>
@@ -1697,14 +1718,14 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_menu_cards"></script>
-  <script src="app.js?v=20261027_menu_cards"></script>
+  <script src="recipes.js?v=20261027_subscreen_polish"></script>
+  <script src="app.js?v=20261027_subscreen_polish"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_menu_cards', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261027_subscreen_polish', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();
@@ -1737,5 +1758,6 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 </body>
 
 </html>
+
 
 

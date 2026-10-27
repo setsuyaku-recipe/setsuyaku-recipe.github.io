@@ -256,8 +256,12 @@ function loadSavedState() {
   if (!urlFamilyCode && hashParam.startsWith('family=')) {
     urlFamilyCode = hashParam.split('=')[1];
   }
-  const urlSyncId = urlParams.get('sid') || '';
-  const urlData = urlParams.get('d') || '';
+  let urlSyncId = urlParams.get('sid') || '';
+  let urlData = urlParams.get('d') || '';
+  if ((urlFamilyCode || urlData || urlSyncId) && !window.confirm('この家族の共有に参加しますか？\n参加すると、この端末の献立・予算・人数・苦手食材・買い物リストを共有内容に置き換えます。')) {
+    urlFamilyCode = ''; urlSyncId = ''; urlData = '';
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 
   if (urlData) {
     const decoded = decodeSharePayload(urlData);
@@ -783,13 +787,28 @@ function getRecipeById(id) {
 }
 
 
+function escapeUiText(value) {
+  return String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getPreferenceItems(pref) {
+  const known = typeof COMMON_DISLIKES === 'undefined' ? [] : COMMON_DISLIKES;
+  const selected = [];
+  for (const [field,isFlavor] of [['dislikes',false],['disabledFlavors',true]]) {
+    for (const id of new Set(pref[field] || [])) {
+      const found = known.find(x=>x.id===id && Boolean(x.isFlavor)===isFlavor);
+      selected.push(found || {id,label:id,category:'flavor',isFlavor,icon:'',legacy:true});
+    }
+  }
+  return selected;
+}
 function getTotalDislikeCount() {
-  return Object.values(state.childrenPreferences || {}).reduce((sum, pref) => {
-    return sum + ((pref.dislikes || []).length) + ((pref.disabledFlavors || []).length);
+  return Object.entries(state.childrenPreferences || {}).filter(([key])=>Number(key.replace('child','')) <= state.childrenCount).reduce((sum, [,pref]) => {
+    return sum + getPreferenceItems(pref).length;
   }, 0);
 }
 
 function updateCoreFlowSummary() {
+  updateHomeBudget();
   const servingsDisplay = document.getElementById('core-servings-display');
   if (servingsDisplay) servingsDisplay.textContent = `${state.servings}人分`;
   const budgetDisplay = document.getElementById('core-budget-display');
@@ -1450,7 +1469,7 @@ function renderPrintShoppingList(container) {
   let hiddenCount = 0;
   Object.keys(aggregated).forEach(key => {
     const item = aggregated[key];
-    const isChecked = !!state.checkedItems[key];
+    const isChecked = isShoppingItemChecked(key, item);
     if (!isChecked) {
       const aisle = grouped[item.aisle] ? item.aisle : '調味料・その他';
       if (aisle === '調味料・その他' && state.hideSeasonings && isBasicSeasoning(item.name)) {
@@ -1491,7 +1510,7 @@ function renderPrintShoppingList(container) {
             🥬 野菜コーナー (${grouped['野菜'].length}品)
           </div>
           <div style="font-size: 9px; line-height: 1.4; color: #1e293b;">
-            ${grouped['野菜'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatAmount(it.amount, it.unit)}</div>`).join('') || '<div style="color: #94a3b8;">なし</div>'}
+            ${grouped['野菜'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatShoppingAmount(it)}</div>`).join('') || '<div style="color: #94a3b8;">なし</div>'}
           </div>
         </div>
 
@@ -1501,7 +1520,7 @@ function renderPrintShoppingList(container) {
             🥩 肉・魚コーナー (${grouped['肉・魚'].length}品)
           </div>
           <div style="font-size: 9px; line-height: 1.4; color: #1e293b;">
-            ${grouped['肉・魚'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatAmount(it.amount, it.unit)}</div>`).join('') || '<div style="color: #94a3b8;">なし</div>'}
+            ${grouped['肉・魚'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatShoppingAmount(it)}</div>`).join('') || '<div style="color: #94a3b8;">なし</div>'}
           </div>
         </div>
 
@@ -1511,7 +1530,7 @@ function renderPrintShoppingList(container) {
             🧈 大豆・乳・加工品 (${grouped['大豆・乳・加工品'].length}品)
           </div>
           <div style="font-size: 9px; line-height: 1.4; color: #1e293b;">
-            ${grouped['大豆・乳・加工品'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatAmount(it.amount, it.unit)}</div>`).join('') || '<div style="color: #94a3b8;">なし</div>'}
+            ${grouped['大豆・乳・加工品'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatShoppingAmount(it)}</div>`).join('') || '<div style="color: #94a3b8;">なし</div>'}
           </div>
         </div>
 
@@ -1522,7 +1541,7 @@ function renderPrintShoppingList(container) {
           </div>
           <div style="font-size: 9px; line-height: 1.35; color: #1e293b; flex: 1;">
             ${customItems.map(it => `<div style="color: #b45309;">□ <strong>[メモ] ${it.name}</strong></div>`).join('')}
-            ${grouped['調味料・その他'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatAmount(it.amount, it.unit)}</div>`).join('')}
+            ${grouped['調味料・その他'].map(it => `<div>□ <strong>${it.name}</strong>: ${formatShoppingAmount(it)}</div>`).join('')}
             ${hiddenCount > 0 ? `<div style="font-size: 8px; color: #64748b; margin-top: 3px;">※基本常備品${hiddenCount}件除外中</div>` : ''}
           </div>
         </div>
@@ -2041,7 +2060,7 @@ function renderSyncModalContent() {
       <!-- QRコード参加エリア -->
       <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center">
         <h4 class="font-bold text-slate-800 text-xs mb-1">📷 相手のスマホカメラで読み取るだけ！</h4>
-        <p class="text-[11px] text-slate-500 mb-2">読み取ると確認画面なしで自動的に共有が始まります</p>
+        <p class="text-[11px] text-slate-500 mb-2">読み取り後、参加を確認してから献立や設定を反映します</p>
         <div class="flex justify-center my-2">
           <div class="p-2 bg-white rounded-2xl shadow-sm border border-slate-200 inline-block">
             <img src="${qrUrl}" alt="共有用QRコード" class="w-44 h-44 mx-auto block" loading="lazy">
@@ -2190,6 +2209,7 @@ window.handleManualJoinActiveSubmit = async function() {
 async function joinFamilyByCode(code, showFeedback = true) {
   const cleanCode = normalizeFamilyCode(code);
   if (!cleanCode) return;
+  if (!window.confirm('この家族に参加しますか？\nこの端末の献立・予算・人数・苦手食材・買い物リストが共有内容に置き換わります。')) return;
 
   if (showFeedback) showToast('共有グループに接続中...');
   const remoteData = await fetchSyncData(cleanCode);
@@ -2463,14 +2483,16 @@ function updateSummaryBadge() {
 
   const shoppingCost = state.weeklyPlan ? calculatePlanTotalCost(state.weeklyPlan, state.shoppingDays) : 0;
   const shoppingBudgetEl = document.getElementById('shopping-estimated-budget');
-  if (shoppingBudgetEl) shoppingBudgetEl.textContent = `約 ¥${shoppingCost.toLocaleString()}`;
+  if (shoppingBudgetEl) shoppingBudgetEl.textContent = `献立の目安 約${shoppingCost.toLocaleString()}円`;
+  const remaining = document.getElementById('shopping-budget-remaining');
+  if (remaining) {const diff = state.targetBudget - shoppingCost;remaining.textContent = `週予算まで${diff >= 0 ? 'あと' : '超過'} ${Math.abs(diff).toLocaleString()}円（選択した曜日の献立目安・実際の購入額ではありません）`;}
 }
 
 function updatePreferenceBadge() {
   const badge = document.getElementById('badge-preferences-summary');
   if (!badge) return;
 
-  const totalDislikes = Object.values(state.childrenPreferences).reduce((sum, pref) => sum + pref.dislikes.length + pref.disabledFlavors.length, 0);
+  const totalDislikes = getTotalDislikeCount();
 
   if (totalDislikes === 0) {
     badge.innerHTML = `
@@ -3094,42 +3116,55 @@ window.toggleShoppingDay = function(dayId) {
   }
 };
 
+function canonicalShoppingName(name) {
+  const n = String(name || '').trim();
+  return ({'にんじん':'人参','ニンジン':'人参','しょうが':'生姜','ショウガ':'生姜','玉ネギ':'玉ねぎ','玉葱':'玉ねぎ','タマネギ':'玉ねぎ','長ネギ':'長ねぎ','長葱':'長ねぎ'})[n] || n;
+}
+function normalizeShoppingMeasure(amount, unit) {
+  let u = String(unit || '').trim();
+  let n = Number(amount);
+  if (u === 'kg') {n *= 1000;u='g';}
+  if (u === 'L' || u === 'l') {n *= 1000;u='ml';}
+  if (['片','かけ','欠片'].includes(u)) u='片';
+  return {amount:n,unit:u};
+}
 function calculateAggregatedShoppingList() {
   if (!state.weeklyPlan) return {};
-
-  const aggregated = {};
-
+  const result = {};
   DAYS_OF_WEEK.forEach(day => {
     if (!state.shoppingDays.includes(day.id)) return;
-    
-    const dayData = state.weeklyPlan[day.id];
-    if (!dayData) return;
-
-    [dayData.main, dayData.side, dayData.soup].forEach(recipeId => {
-      const recipe = getRecipeById(recipeId);
+    const data = state.weeklyPlan[day.id];
+    if (!data) return;
+    [data.main,data.side,data.soup].forEach(id => {
+      const recipe = getRecipeById(id);
       if (!recipe) return;
-
-      recipe.ingredients.forEach(ing => {
-        const key = `${ing.name}__${ing.unit}`;
-        const scaledAmount = ing.amount * state.servings;
-
-        if (!aggregated[key]) {
-          aggregated[key] = {
-            name: ing.name,
-            amount: 0,
-            unit: ing.unit,
-            aisle: ing.aisle || '調味料・その他'
-          };
-        }
-        aggregated[key].amount += scaledAmount;
+      (recipe.ingredients || []).forEach(ing => {
+        const name = canonicalShoppingName(ing.name);
+        const m = normalizeShoppingMeasure(ing.amount * state.servings, ing.unit);
+        if (!name || !Number.isFinite(m.amount) || m.amount <= 0) return;
+        const key = name + '__all';
+        if (!result[key]) result[key] = {name,amount:0,unit:m.unit,aisle:ing.aisle || '調味料・その他',measures:{},sourceKeys:[]};
+        const item = result[key];
+        item.measures[m.unit] = (item.measures[m.unit] || 0) + m.amount;
+        item.sourceKeys.push(ing.name + '__' + ing.unit);
+        item.amount = item.measures[item.unit];
       });
     });
   });
-
-  return aggregated;
+  return result;
+}
+function formatShoppingAmount(item) {
+  if (!item.measures) return formatAmount(item.amount,item.unit);
+  return Object.entries(item.measures).map(([unit,amount]) => formatAmount(amount,unit)).join(' ＋ ');
+}
+function isShoppingItemChecked(key, item) {
+  if (Object.prototype.hasOwnProperty.call(state.checkedItems,key)) return !!state.checkedItems[key];
+  // Preserve earlier checks only when every component had been checked.
+  return item.sourceKeys?.length > 0 && item.sourceKeys.every(k => !!state.checkedItems[k]);
 }
 
 function formatAmount(amount, unit) {
+  if (['かけ','片','欠片'].includes(unit)) return `約 ${Math.ceil(amount)}片`;
   if (unit === 'g') {
     if (amount >= 1000) {
       const kg = (amount / 1000).toFixed(1).replace(/\.0$/, '');
@@ -3288,7 +3323,7 @@ function renderShoppingList() {
 
   keys.forEach(key => {
     const item = aggregated[key];
-    const isChecked = !!state.checkedItems[key];
+    const isChecked = isShoppingItemChecked(key, item);
     if (isChecked) {
       purchasedItems.push({ key, ...item });
     } else {
@@ -3376,7 +3411,7 @@ function renderShoppingList() {
             </span>
           </div>
           <span class="text-sm font-black text-teal-700">
-            ${formatAmount(item.amount, item.unit)}
+            ${formatShoppingAmount(item)}
           </span>
         </label>
       `;
@@ -3401,7 +3436,7 @@ function renderShoppingList() {
     section.innerHTML = `
       <div class="px-5 py-3 border-b border-sky-100 flex items-center justify-between bg-gradient-to-r from-sky-50/70 via-teal-50/40 to-lime-50/50">
         <div class="flex items-center gap-2">
-          <span class="text-lg leading-none">${conf.emoji}</span>
+          <i data-lucide="${conf.icon}" class="w-5 h-5" aria-hidden="true"></i>
           <h3 class="font-black text-slate-800 text-sm">${aisle}コーナー</h3>
         </div>
         <span class="text-xs text-teal-900 font-bold bg-white/90 px-2.5 py-0.5 rounded-full border border-teal-200/80 shadow-2xs">${items.length}品目</span>
@@ -3470,7 +3505,7 @@ function renderShoppingList() {
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-slate-400 line-through">
-              ${formatAmount(item.amount, item.unit)}
+              ${formatShoppingAmount(item)}
             </span>
             <span class="text-[10px] text-teal-600 font-bold hidden group-hover:inline">元に戻す</span>
           </div>
@@ -3489,7 +3524,8 @@ function renderShoppingList() {
 }
 
 window.toggleCheckItem = function(key) {
-  state.checkedItems[key] = !state.checkedItems[key];
+  const item = calculateAggregatedShoppingList()[key];
+  state.checkedItems[key] = !isShoppingItemChecked(key, item || {});
   saveChecked();
   renderShoppingList();
   if (state.familySyncCode) {
@@ -3515,7 +3551,7 @@ function generateShoppingListText() {
   let hiddenCount = 0;
   Object.keys(aggregated).forEach(key => {
     const item = aggregated[key];
-    const isChecked = !!state.checkedItems[key];
+    const isChecked = isShoppingItemChecked(key, item);
     if (!isChecked) {
       const aisle = grouped[item.aisle] ? item.aisle : '調味料・その他';
       if (aisle === '調味料・その他' && state.hideSeasonings && isBasicSeasoning(item.name)) {
@@ -3547,7 +3583,7 @@ function generateShoppingListText() {
     if (items.length > 0) {
       text += `\n■ ${aisle}コーナー\n`;
       items.forEach(item => {
-        text += `・${item.name}: ${formatAmount(item.amount, item.unit)}\n`;
+        text += `・${item.name}: ${formatShoppingAmount(item)}\n`;
         totalUnchecked++;
       });
     }
@@ -4143,7 +4179,7 @@ window.openPreferencesModal = function(isOnboarding = false) {
         const isActive = state.activeChildTab === childKey;
         // その子どもの苦手登録総数
         const pref = state.childrenPreferences[childKey] || { dislikes: [], disabledFlavors: [] };
-        const totalCount = (pref.dislikes || []).length + (pref.disabledFlavors || []).length;
+        const totalCount = getPreferenceItems(pref).length;
         const countBadge = totalCount > 0 ? `<span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white text-teal-800' : 'bg-slate-200 text-slate-700'} font-black">${totalCount}</span>` : '';
 
         tabsHtml += `
@@ -4245,12 +4281,12 @@ window.updateDislikeCategoryButtons = function() {
   grid.querySelectorAll('.cat-btn').forEach(btn => {
     const cat = btn.getAttribute('data-cat');
     const isActive = cat === state.activeDislikeCategory && !state.dislikeSearchQuery;
+    btn.setAttribute('aria-pressed', String(isActive));
 
     // カテゴリー内の登録件数を集計
     let count = 0;
     if (typeof COMMON_DISLIKES !== 'undefined') {
-      const itemsInCat = COMMON_DISLIKES.filter(item => item.category === cat);
-      count = itemsInCat.filter(item => item.isFlavor ? flavors.includes(item.id) : dislikes.includes(item.id)).length;
+      count = getPreferenceItems(pref).filter(item => item.category === cat).length;
     }
 
     const badge = btn.querySelector('.cat-badge');
@@ -4294,12 +4330,13 @@ window.renderDislikeItemsList = function() {
   const dislikes = pref.dislikes || [];
   const flavors = pref.disabledFlavors || [];
 
+  const availableItems = [...COMMON_DISLIKES, ...getPreferenceItems(pref).filter(x=>x.legacy)];
   let targetItems = [];
   const q = state.dislikeSearchQuery;
 
   if (q) {
     // 検索モード：全食材から名称・シノニムでフィルタリング
-    targetItems = COMMON_DISLIKES.filter(item => {
+    targetItems = availableItems.filter(item => {
       if (item.label.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)) return true;
       if (typeof DISLIKE_SYNONYMS !== 'undefined' && DISLIKE_SYNONYMS[item.id]) {
         return DISLIKE_SYNONYMS[item.id].some(syn => syn.toLowerCase().includes(q));
@@ -4308,7 +4345,7 @@ window.renderDislikeItemsList = function() {
     });
   } else {
     // 通常モード：選択中カテゴリー内の食材（五十音順）
-    targetItems = COMMON_DISLIKES.filter(item => item.category === state.activeDislikeCategory);
+    targetItems = availableItems.filter(item => item.category === state.activeDislikeCategory);
   }
 
   if (targetItems.length === 0) {
@@ -4324,14 +4361,13 @@ window.renderDislikeItemsList = function() {
     const isChecked = item.isFlavor ? flavors.includes(item.id) : dislikes.includes(item.id);
     return `
       <button type="button" 
-              onclick="toggleDislikeItem('${item.id}', ${Boolean(item.isFlavor)})"
+              data-dislike-id="${escapeUiText(item.id)}" onclick="toggleDislikeItem(this.dataset.dislikeId, ${Boolean(item.isFlavor)})"
               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs border transition-all cursor-pointer select-none active:scale-95 ${
                 isChecked 
                   ? 'bg-teal-600 text-white border-teal-600 font-bold shadow-2xs' 
                   : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50 font-medium'
               }">
-        <span class="text-sm">${item.icon}</span>
-        <span>${item.label}</span>
+        <span>${escapeUiText(item.label)}</span>
         ${isChecked ? '<span class="text-[10px] font-black bg-white/20 rounded-full px-1">✓</span>' : ''}
       </button>
     `;
@@ -4372,7 +4408,7 @@ window.toggleDislikeItem = function(itemId, isFlavor) {
   if (tabsContainer) {
     const btn = tabsContainer.querySelector(`button[data-child-tab="${currentChild}"]`);
     if (btn) {
-      const totalCount = pref.dislikes.length + pref.disabledFlavors.length;
+      const totalCount = getPreferenceItems(pref).length;
       btn.innerHTML = `
         <span>子供${currentChild.replace('child', '')}</span>
         ${totalCount > 0 ? `<span class="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-white text-teal-800 font-black">${totalCount}</span>` : ''}
@@ -4888,7 +4924,13 @@ window.deleteCustomRecipe = function(id, event) {
 // Universal-design navigation: sparse home, one task per screen.
 let setupDraft = { servings: 4, budget: 8000 };
 const UD_SETUP_KEY = 'frugal_meal_setup_complete_v1';
+function updateHomeBudget() {
+  const el = document.getElementById('ud-home-budget');
+  if (!el) return;
+  el.textContent = state.weeklyPlan ? `今週 ${Number(state.targetBudget).toLocaleString()}円・${state.servings}人分` : '予算に合わせて、家族の献立を';
+}
 function syncAppScreen() {
+  updateHomeBudget();
   const screen = state.activeTab;
   document.body.dataset.screen = screen;
   document.getElementById('ud-home').hidden = screen !== 'home';
@@ -4977,4 +5019,5 @@ function setupUniversalNavigation() {
     else setAppScreen(screen,false);
   });
 }
+
 

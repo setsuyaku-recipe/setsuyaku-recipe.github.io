@@ -949,6 +949,16 @@ body #weekly-plan-container .weekly-overview .weekly-dish:last-child{margin-bott
 @media(max-width:360px){body #weekly-plan-container .weekly-overview .weekly-overview-day{padding:8px!important}.weekly-overview .reading-day-header h2{font-size:22px}body #weekly-plan-container .weekly-overview .reading-day-header{margin:-8px -8px 10px;padding:10px 12px 6px}}
 @media print{body #weekly-plan-container .weekly-overview .weekly-overview-day{break-inside:avoid;box-shadow:none!important}}
 
+
+.ud-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px;min-width:0}
+body[data-screen="weekly"] .ud-title-row #ud-page-title{margin:0;flex:0 0 auto}
+.weekly-display-switch{display:flex;gap:3px;background:#edf1e7;border:1px solid #c6d1bf;padding:3px;border-radius:12px;box-sizing:border-box;max-width:100%}
+body .weekly-display-switch button{display:flex!important;align-items:center;justify-content:center;gap:4px;min-height:44px!important;padding:7px 10px!important;border:1px solid transparent;border-radius:8px!important;font-size:13px!important;line-height:1.4;font-weight:600!important;white-space:nowrap;color:#42583e!important;background:transparent!important;box-shadow:none!important;cursor:pointer}
+body .weekly-display-switch button[aria-pressed="true"]{background:#2c654f!important;color:#fff!important;border-color:#2c654f;font-weight:750!important;box-shadow:0 2px 0 #c8d2bf!important}
+.weekly-display-switch button::before{content:"";width:12px;flex:0 0 12px}
+.weekly-display-switch button[aria-pressed="true"]::before{content:"✓"}
+.weekly-display-switch button:focus-visible{outline:3px solid #ba8421;outline-offset:2px}
+@media(max-width:360px){.ud-title-row{align-items:flex-start}.weekly-display-switch{margin-left:auto}}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -974,7 +984,7 @@ body #weekly-plan-container .weekly-overview .weekly-dish:last-child{margin-bott
   </section>
   <header id="ud-workspace" class="ud-workspace" hidden>
     <button type="button" class="ud-home-back" onclick="returnAppHome()"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 11 12 2l10 9h-3v11h-5v-7h-4v7H5V11Z" fill="currentColor"/></svg><span>ホーム</span></button>
-    <h1 id="ud-page-title" tabindex="-1">今週の献立</h1>
+    <div class="ud-title-row"><h1 id="ud-page-title" tabindex="-1">今週の献立</h1><div id="weekly-display-switch" class="weekly-display-switch" role="group" aria-label="献立の表示方法" hidden><button type="button" id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')" aria-pressed="true" aria-controls="weekly-plan-container">1日ずつ</button><button type="button" id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')" aria-pressed="false" aria-controls="weekly-plan-container">7日まとめて</button></div></div>
     <div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition"></span><button type="button" onclick="openMealSetup()">変更</button></div>
   </header>
 
@@ -1105,10 +1115,7 @@ body #weekly-plan-container .weekly-overview .weekly-dish:last-child{margin-bott
       </div>
 
       <div class="weekly-subtools">
-        <div class="weekly-view-switch">
-          <button id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')">1日ずつ</button>
-          <button id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')">7日まとめて</button>
-        </div>
+
         <button id="btn-print-weekly" onclick="triggerPrintWeeklyPlan()" class="weekly-print-btn" title="冷蔵庫に貼れるA4用紙1枚で印刷・PDF保存">
           <span>🖨️</span><span>印刷</span>
         </button>
@@ -1779,8 +1786,8 @@ body #weekly-plan-container .weekly-overview .weekly-dish:last-child{margin-bott
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_week_boundaries"></script>
-  <script src="app.js?v=20261028_week_boundaries"></script>
+  <script src="recipes.js?v=20261028_view_switch"></script>
+  <script src="app.js?v=20261028_view_switch"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1790,7 +1797,7 @@ body #weekly-plan-container .weekly-overview .weekly-dish:last-child{margin-bott
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_week_boundaries', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261028_view_switch', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

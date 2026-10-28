@@ -2621,6 +2621,8 @@ function bindSingleStepSwipe(element, onStep, threshold = 48) {
 }
 
 function setWeeklyViewMode(mode) {
+  if (!['swipe','all'].includes(mode)) return;
+  updateWeeklyDisplaySwitch(mode);
   state.weeklyViewMode = mode;
   try {
     localStorage.setItem(STORAGE_KEY_WEEKLY_VIEW_MODE, mode);
@@ -2690,6 +2692,7 @@ function updateSwipeNavIndicators() {
 }
 
 function renderWeeklyPlan() {
+  updateWeeklyDisplaySwitch();
   const container = document.getElementById('weekly-plan-container');
   if (!container) return;
 
@@ -4986,7 +4989,16 @@ window.openTodayMealScreen = function() {
   openMealScreen();
 };
 
+function updateWeeklyDisplaySwitch(mode = state.weeklyViewMode) {
+  const group = document.getElementById('weekly-display-switch');
+  if (group) group.hidden = state.activeTab !== 'weekly';
+  for (const key of ['swipe','all']) {
+    const button = document.getElementById('btn-weekly-view-' + key);
+    if(button) button.setAttribute('aria-pressed',String(mode === key));
+  }
+}
 function syncAppScreen() {
+  updateWeeklyDisplaySwitch();
   updateHomeBudget();
   const screen = state.activeTab;
   document.body.dataset.screen = screen;

@@ -985,6 +985,13 @@ body .meal-card .meal-title{word-break:normal;overflow-wrap:normal;text-wrap:pre
 .meal-title-chunk{display:inline-block;white-space:nowrap;max-width:100%;vertical-align:baseline}
 body .meal-card .meal-title-prefix{word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
 
+
+/* Balance short final lines while keeping complete cooking terms intact. */
+body .meal-card .meal-title{width:100%;text-wrap:balance;line-height:1.5;letter-spacing:0;font-weight:650}
+body .meal-card .meal-title-prefix{ text-wrap:balance }
+body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
+@media(max-width:420px){body .weekly-dish-main .meal-title{font-size:21px}body .weekly-dish-side .meal-title,body .weekly-dish-soup .meal-title{font-size:19px}}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1809,8 +1816,8 @@ body .meal-card .meal-title-prefix{word-break:keep-all;overflow-wrap:break-word;
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_meal_wordwrap"></script>
-  <script src="app.js?v=20261028_meal_wordwrap"></script>
+  <script src="recipes.js?v=20261028_balanced_lines"></script>
+  <script src="app.js?v=20261028_balanced_lines"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1820,7 +1827,7 @@ body .meal-card .meal-title-prefix{word-break:keep-all;overflow-wrap:break-word;
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_meal_wordwrap', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261028_balanced_lines', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

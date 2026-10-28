@@ -2887,7 +2887,7 @@ function getMealReadingName(recipe) {
 
 function getMealTitleChunks(text) {
   // Protect common food and cooking terms before Japanese word segmentation.
-  const terms = ['鶏ひき肉','豚ひき肉','合いびき肉','マイルド','麻婆豆腐','照り焼き','つくね','ハンバーグ','みそ汁','味噌汁','クリームシチュー','シチュー','カリフラワー','ブロッコリー','ほうれん草','じゃがいも','さつまいも','さば缶','オイスターソース','中華炒め','甘口','甘辛','木綿豆腐','絹ごし豆腐','豆腐','もやし','長ねぎ','長ネギ','玉ねぎ','ピーマン','にんじん','わかめ','キャベツ','チーズ','バター','しょうが','生姜','とろとろ','ふんわり','やわらか','ガーリック','ケチャップ','ポン酢','鶏むね肉','鶏もも肉','豚こま肉','豚バラ肉','鶏ひき','豚ひき'];
+  const terms = ['ちくわ','お豆腐','うま塩昆布','レンジ蒸し','すまし汁','味噌炒め','みそ炒め','回鍋肉','ごまスープ','塩昆布','和風すまし汁','中華スープ','ピリ辛','こってり','うま塩','豚こま','鶏ひき肉','豚ひき肉','合いびき肉','マイルド','麻婆豆腐','照り焼き','つくね','ハンバーグ','みそ汁','味噌汁','クリームシチュー','シチュー','カリフラワー','ブロッコリー','ほうれん草','じゃがいも','さつまいも','さば缶','オイスターソース','中華炒め','甘口','甘辛','木綿豆腐','絹ごし豆腐','豆腐','もやし','長ねぎ','長ネギ','玉ねぎ','ピーマン','にんじん','わかめ','キャベツ','チーズ','バター','しょうが','生姜','とろとろ','ふんわり','やわらか','ガーリック','ケチャップ','ポン酢','鶏むね肉','鶏もも肉','豚こま肉','豚バラ肉','鶏ひき','豚ひき'];
   const protectedWords = new Set(terms);
   const pattern = new RegExp('(' + terms.sort((a,b)=>b.length-a.length).join('|') + ')','g');
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja',{granularity:'word'}) : null;
@@ -2899,6 +2899,9 @@ function getMealTitleChunks(text) {
       if (chunks.length && /^(の|と|を|に|で|が|も|は|な|風|入り|添え|・|、|\s+)$/.test(word)) chunks[chunks.length-1] += word;
       else chunks.push(word);
     }
+  }
+  for (let i = 0; i < chunks.length - 2; i++) {
+    if (/^[（(]$/.test(chunks[i]) && /^[）)]$/.test(chunks[i+2])) chunks.splice(i,3,chunks[i]+chunks[i+1]+chunks[i+2]);
   }
   return chunks;
 }

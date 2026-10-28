@@ -959,6 +959,15 @@ body .weekly-display-switch button[aria-pressed="true"]{background:#2c654f!impor
 .weekly-display-switch button[aria-pressed="true"]::before{content:"✓"}
 .weekly-display-switch button:focus-visible{outline:3px solid #ba8421;outline-offset:2px}
 @media(max-width:360px){.ud-title-row{align-items:flex-start}.weekly-display-switch{margin-left:auto}}
+
+/* Compact visible control; keep a 44px touch row around the smaller face. */
+body .weekly-display-switch{position:relative;isolation:isolate;background:transparent;border:0;padding:0;gap:2px;border-radius:0;height:44px;align-items:stretch;flex-shrink:0}
+.weekly-display-switch::before{content:"";position:absolute;inset:5px 0;background:#edf1e7;border:1px solid #ccd5c6;border-radius:9px;z-index:-2;pointer-events:none}
+body .weekly-display-switch button{position:relative;isolation:isolate;min-height:44px!important;padding:5px 8px!important;font-size:12px!important;font-weight:550!important;gap:3px;border:0!important;line-height:1.3;background:transparent!important;box-shadow:none!important}
+body .weekly-display-switch button[aria-pressed="true"]{background:transparent!important;box-shadow:none!important;font-weight:650!important}
+.weekly-display-switch button[aria-pressed="true"]::after{content:"";position:absolute;inset:7px 2px;background:#2c654f;border-radius:7px;z-index:-1;pointer-events:none}
+.weekly-display-switch button::before{width:9px;flex-basis:9px;font-size:10px}
+.ud-title-row{gap:4px 10px;margin-bottom:4px}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1786,8 +1795,8 @@ body .weekly-display-switch button[aria-pressed="true"]{background:#2c654f!impor
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_view_switch"></script>
-  <script src="app.js?v=20261028_view_switch"></script>
+  <script src="recipes.js?v=20261028_compact_switch"></script>
+  <script src="app.js?v=20261028_compact_switch"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1797,7 +1806,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:#2c654f!impor
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_view_switch', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261028_compact_switch', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

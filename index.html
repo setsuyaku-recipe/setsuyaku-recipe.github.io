@@ -933,6 +933,7 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
 @media(max-height:740px){body .ud-home.home-b{padding-top:16px}.home-b #ud-home-title{font-size:26px;margin-bottom:8px}.home-b .ud-home-budget{margin-bottom:10px;padding:6px 12px}.home-meal-hero{min-height:224px}.home-meal-action{margin-bottom:16px}.home-secondary button{min-height:62px}.home-secondary svg{width:48px;height:48px;flex-basis:48px}.home-secondary{gap:9px;margin-top:12px}.home-b .ud-home-links{margin-top:20px}}
 @media(prefers-reduced-motion:reduce){.home-meal-hero,.home-secondary button{transition:none}.home-meal-hero:active,.home-secondary button:active{transform:none}}
 
+.home-rice-character{object-fit:contain;aspect-ratio:1;width:41%;height:auto;max-width:190px;filter:drop-shadow(0 5px 2px #003c3020)}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -947,7 +948,7 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
     <button type="button" class="home-meal-hero" onclick="openTodayMealScreen()">
       <span id="home-meal-action" class="home-meal-action">献立を見る <span aria-hidden="true">›</span></span>
       <span class="home-meal-content"><span id="home-meal-label" class="home-meal-label">今日の主菜</span><span id="home-meal-title" class="home-meal-title"></span><span id="home-meal-day" class="home-meal-day"></span></span>
-      <svg class="home-rice-character" viewBox="0 0 200 210" aria-hidden="true" focusable="false"><ellipse cx="105" cy="191" rx="70" ry="10" fill="#003f33" opacity=".3"/><g stroke="#102f52" stroke-width="6" stroke-linejoin="round"><path d="M106 62Q83 43 97 22q24 0 28 29Q129 23 158 29q5 27-35 35" fill="#8fce32"/><path d="M119 57q0-14-15-25m20 22 22-14" fill="none" stroke="#fff8ce" stroke-width="3"/><path d="M32 121q-13-16 3-28-3-15 15-20 3-15 22-12 10-19 28-8 14-14 29 0 23-3 29 17 21 2 20 21 18 13 5 30" fill="#fffdf4"/><path d="M25 116q4 64 77 68 70-2 79-68Z" fill="#128ee5"/><path d="M47 128q9 36 40 43" fill="none" stroke="#70c7ff" stroke-width="9" stroke-linecap="round"/><path d="m76 183-4 11h61l-4-11" fill="#087ac9"/></g><circle cx="74" cy="96" r="6" fill="#102f52"/><circle cx="130" cy="96" r="6" fill="#102f52"/><path d="M93 106q9 10 18 0" fill="none" stroke="#102f52" stroke-width="5" stroke-linecap="round"/><ellipse cx="57" cy="108" rx="11" ry="6" fill="#ffb09c"/><ellipse cx="147" cy="108" rx="11" ry="6" fill="#ffb09c"/><g stroke="#ffd044" stroke-width="7" stroke-linecap="round"><path d="m165 8-7 16m29 0-12 12"/></g></svg>
+      <img class="home-rice-character" src="assets/gohan-kun.png" width="1280" height="1280" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
     </button>
     <nav class="home-secondary" aria-label="家族と買い物のメニュー">
       <button type="button" onclick="goToAppTab('shopping')"><svg viewBox="0 0 80 80" aria-hidden="true"><g stroke="#173852" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 36q-8-26 7-26 12 3 9 26m7 0q-1-23 15-22 13 11-2 22" fill="#92c850"/><circle cx="57" cy="33" r="11" fill="#ed896b"/><path d="m13 35 7 32h42l7-32Z" fill="#f5a18c"/><path d="M10 34h62M29 45v11m12-11v11m12-11v11" fill="none"/></g></svg><span>買い物</span><span class="home-nav-chevron" aria-hidden="true">›</span></button>
@@ -1763,14 +1764,14 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_home_b"></script>
-  <script src="app.js?v=20261028_home_b"></script>
+  <script src="recipes.js?v=20261028_gohan_character"></script>
+  <script src="app.js?v=20261028_gohan_character"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_home_b', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261028_gohan_character', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

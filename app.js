@@ -2881,7 +2881,29 @@ function getMealReadingName(recipe) {
   if (original === '長ネギのとろとろ焼きネギ味噌') title = '長ねぎのみそ焼き';
   title = title.replace(/お味噌汁|味噌汁/g, 'みそ汁');
   const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  return { title: escape(title), ingredients: '' };
+  return { title: escape(title), rawTitle: title, ingredients: '' };
+}
+
+
+function getMealTitleChunks(text) {
+  // Protect common food and cooking terms before Japanese word segmentation.
+  const terms = ['鶏ひき肉','豚ひき肉','合いびき肉','マイルド','麻婆豆腐','照り焼き','つくね','ハンバーグ','みそ汁','味噌汁','クリームシチュー','シチュー','カリフラワー','ブロッコリー','ほうれん草','じゃがいも','さつまいも','さば缶','オイスターソース','中華炒め','甘口','甘辛','木綿豆腐','絹ごし豆腐','豆腐','もやし','長ねぎ','長ネギ','玉ねぎ','ピーマン','にんじん','わかめ','キャベツ','チーズ','バター','しょうが','生姜','とろとろ','ふんわり','やわらか','ガーリック','ケチャップ','ポン酢','鶏むね肉','鶏もも肉','豚こま肉','豚バラ肉','鶏ひき','豚ひき'];
+  const protectedWords = new Set(terms);
+  const pattern = new RegExp('(' + terms.sort((a,b)=>b.length-a.length).join('|') + ')','g');
+  const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ja',{granularity:'word'}) : null;
+  const chunks = [];
+  for (const part of String(text).split(pattern)) {
+    if (!part) continue;
+    const words = protectedWords.has(part) ? [part] : segmenter ? Array.from(segmenter.segment(part),x=>x.segment) : part.split(/(?<=[のと・])/u);
+    for (const word of words) {
+      if (chunks.length && /^(の|と|を|に|で|が|も|は|な|風|入り|添え|・|、|\s+)$/.test(word)) chunks[chunks.length-1] += word;
+      else chunks.push(word);
+    }
+  }
+  return chunks;
+}
+function renderMealTitle(text) {
+  return getMealTitleChunks(text).map(chunk=>'<span class="meal-title-chunk">'+escapeUiText(chunk)+'</span>').join('<wbr>');
 }
 
 function renderDishRow(dayId, category, recipe, label) {
@@ -2938,10 +2960,10 @@ function renderDishRow(dayId, category, recipe, label) {
     '鶏ひき肉と豆腐のふんわり照り焼きつくね': ['鶏ひき肉と豆腐の', '照り焼きつくね', '甘辛だれの、やわらかつくね'],
     '長ネギのとろとろ焼きネギ味噌': ['', '長ねぎのみそ焼き', '焼いて香ばしく、みそ味に']
   };
-  const parts = known[cleanTitle] || ['', reading.title, ''];
+  const parts = known[cleanTitle] || ['', reading.rawTitle, ''];
   return `<article class="weekly-dish weekly-dish-${category} meal-card" aria-label="${label}">
     <div class="meal-card-band"><span aria-hidden="true">${category === 'main' ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3v6q0 3 3 3t3-3V3M7 3v18M19 3q-5 4-4 10h4V3v18"/></svg>' : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18q0 11-9 11T3 7ZM8 18v3h8v-3"/></svg>'}</span><span>${label}</span><span class="meal-band-rule"></span></div>
-    <div class="meal-card-body"><h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}')">${parts[1]}</button></h3>
+    <div class="meal-card-body"><h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}')">${renderMealTitle(parts[1])}</button></h3>
     ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}</div>
     <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}')">作り方 <span aria-hidden="true">›</span></button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更"><span aria-hidden="true">⇄</span> この１品を変更</button></div>
 

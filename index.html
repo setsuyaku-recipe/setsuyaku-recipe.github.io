@@ -979,6 +979,12 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
 .home-meal-title,.ud-guide-steps strong,.ud-guide-steps p{word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}.home-title-phrase{white-space:nowrap}.ud-guide-steps{list-style:decimal;padding-left:24px;display:grid;gap:16px}.ud-guide-steps p{font-size:15px;line-height:1.7;margin-top:4px}
 #ud-page-title,.reading-day-header h2{font-family:"Zen Maru Gothic",ui-rounded,sans-serif}
 
+
+/* Meal names wrap between readable words, not in the middle of a food name. */
+body .meal-card .meal-title{word-break:normal;overflow-wrap:normal;text-wrap:pretty;line-height:1.5}
+.meal-title-chunk{display:inline-block;white-space:nowrap;max-width:100%;vertical-align:baseline}
+body .meal-card .meal-title-prefix{word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1803,8 +1809,8 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_consistent_details"></script>
-  <script src="app.js?v=20261028_consistent_details"></script>
+  <script src="recipes.js?v=20261028_meal_wordwrap"></script>
+  <script src="app.js?v=20261028_meal_wordwrap"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1814,7 +1820,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_consistent_details', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261028_meal_wordwrap', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

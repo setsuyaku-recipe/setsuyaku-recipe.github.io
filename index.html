@@ -910,6 +910,29 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 .family-join-form button{width:100%;min-height:48px;white-space:nowrap}
 @media(min-width:480px){.family-join-form{flex-direction:row}.family-join-form input{width:0}.family-join-form button{width:auto}}
 
+
+/* Home B: one primary action, three generous secondary rows. */
+body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 20px 18px;gap:0}
+.home-b #ud-home-title{font-family:ui-rounded,"Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;font-size:29px;line-height:1.35;font-weight:800;margin:0 0 12px;color:#164d3e}
+.home-b .ud-home-budget{align-self:center;max-width:100%;box-sizing:border-box;margin:0 0 14px;padding:9px 16px;border-radius:30px;background:#fff3d7;color:#204f3e;font-size:16px;font-weight:650;line-height:1.5;text-align:center}
+.home-b .ud-home-budget::before{content:"";display:inline-block;width:13px;height:13px;border-radius:50%;background:#ffcf3e;margin-right:9px;vertical-align:-1px}
+.home-meal-hero{position:relative;display:flex;flex-direction:column;isolation:isolate;width:100%;min-height:250px;padding:22px 20px 18px;box-sizing:border-box;border:1px solid #16543f;border-radius:20px;background:#075b47;color:#fff;text-align:left;box-shadow:0 4px 0 #d7dfcf;transition:transform .12s,box-shadow .12s}
+.home-meal-action{display:block;font-size:29px;line-height:1.35;font-weight:750;position:relative;z-index:2;margin-bottom:24px}.home-meal-action>span{margin-left:9px;font-size:35px;font-weight:400}
+.home-meal-content{display:flex;flex-direction:column;align-items:flex-start;width:62%;position:relative;z-index:2;min-width:0}
+.home-meal-label{font-size:12px;line-height:1.4;font-weight:700;color:#164636;background:#ffd343;border-radius:20px;padding:4px 11px;margin-bottom:9px}
+.home-meal-title{font-size:17px;line-height:1.55;font-weight:650;overflow-wrap:anywhere;word-break:normal;text-wrap:pretty}
+.home-meal-day{font-size:13px;line-height:1.5;margin-top:10px;font-weight:550}
+.home-rice-character{position:absolute;right:8px;bottom:14px;width:41%;height:auto;z-index:1;pointer-events:none}
+.home-secondary{display:grid;gap:11px;margin-top:16px}
+.home-secondary button{display:flex;align-items:center;gap:16px;width:100%;min-width:0;min-height:70px;padding:6px 16px;box-sizing:border-box;background:#fff;border:1px solid #ede8dc;border-radius:15px;box-shadow:0 3px 0 #e9e5d9;color:#184c3c;text-align:left;transition:transform .12s,box-shadow .12s}
+.home-secondary svg{width:55px;height:55px;flex:0 0 55px}.home-secondary button>span:not(.home-nav-chevron){font-size:20px;font-weight:700;word-break:keep-all}.home-secondary .home-nav-chevron{margin-left:auto;font-size:30px;line-height:1;color:#727b71}
+.home-b .ud-home-links{border-top:1px solid #e5e0d3;padding-top:12px;margin-top:auto;padding-bottom:0;gap:12px}.home-b .ud-home-links button{font-size:16px;min-height:44px}.home-b .ud-home-links button+button{border-left:0;padding-left:12px}
+.home-meal-hero:active,.home-secondary button:active{transform:translateY(3px);box-shadow:0 1px 0 #d7dfcf}
+.home-b button:focus-visible{outline:3px solid #ca8f1e;outline-offset:4px}
+@media(max-width:360px){body .ud-home.home-b{padding:18px 14px 14px}.home-b #ud-home-title{font-size:26px}.home-meal-hero{padding:18px 15px;min-height:230px}.home-meal-action{font-size:26px}.home-meal-title{font-size:16px}.home-secondary button{gap:12px;min-height:64px}.home-secondary svg{width:48px;height:48px;flex-basis:48px}}
+@media(max-height:740px){body .ud-home.home-b{padding-top:16px}.home-b #ud-home-title{font-size:26px;margin-bottom:8px}.home-b .ud-home-budget{margin-bottom:10px;padding:6px 12px}.home-meal-hero{min-height:224px}.home-meal-action{margin-bottom:16px}.home-secondary button{min-height:62px}.home-secondary svg{width:48px;height:48px;flex-basis:48px}.home-secondary{gap:9px;margin-top:12px}.home-b .ud-home-links{margin-top:20px}}
+@media(prefers-reduced-motion:reduce){.home-meal-hero,.home-secondary button{transition:none}.home-meal-hero:active,.home-secondary button:active{transform:none}}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -918,14 +941,21 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
   <div id="print-weekly-table-container"></div>
 
 
-  <section id="ud-home" class="ud-home" aria-labelledby="ud-home-title">
-    <img class="ud-home-mascot" src="icons/icon-192.png" width="76" height="76" alt="週ぎめごはんのごはん茶碗キャラクター" decoding="async"><h1 id="ud-home-title">週ぎめごはん</h1><p id="ud-home-budget" class="ud-home-budget"></p>
-    <div class="ud-home-grid">
-<button type="button" class="ud-tile ud-tile-meal" onclick="openMealScreen()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="31" fill="#f6b587"/><circle cx="50" cy="50" r="24" fill="none" stroke="#fffaf2" stroke-width="4"/><path d="M10 24v23m-5-23v14q0 10 10 10m5-24v14q0 10-10 10v28M88 23v53m0-53q-13 16 0 31" fill="none" stroke="#245746" stroke-width="4" stroke-linecap="round"/></svg><span>献立</span></button>
-<button type="button" class="ud-tile ud-tile-shop" onclick="goToAppTab('shopping')"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><path d="M12 20h12l11 45h42l12-34H29" fill="#ec9862" stroke="#ec9862" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="42" cy="80" r="7" fill="#ec9862"/><circle cx="74" cy="80" r="7" fill="#ec9862"/></svg><span>買い物</span></button>
-<button type="button" class="ud-tile ud-tile-child" onclick="openPreferencesModal(false)"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="42" fill="#fff0e5"/><path d="M29 67q21-12 42 0l7 23H22Z" fill="#e99c78"/><circle cx="24" cy="45" r="7" fill="#f4c7a2"/><circle cx="76" cy="45" r="7" fill="#f4c7a2"/><path d="M25 35q0-24 25-24t25 24v16q0 24-25 24T25 51Z" fill="#f6d4b4"/><path d="M25 40q-5-28 23-29 30-1 27 29l-9-10-9 3-8-9-11 10-11-1Z" fill="#5f5146"/><circle cx="39" cy="46" r="3" fill="#3c4539"/><circle cx="61" cy="46" r="3" fill="#3c4539"/><path d="M43 58q7 6 14 0" fill="none" stroke="#8f5548" stroke-width="3" stroke-linecap="round"/><ellipse cx="32" cy="54" rx="5" ry="3" fill="#edac99"/><ellipse cx="68" cy="54" rx="5" ry="3" fill="#edac99"/></svg><span>苦手食材</span></button>
-<button type="button" class="ud-tile ud-tile-family" onclick="openSyncModal()"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="26" r="14" fill="#245746"/><path d="M29 75V57q0-18 21-18t21 18v18" fill="#245746"/><circle cx="20" cy="51" r="11" fill="#85a68a"/><path d="M4 88V76q0-15 16-15t16 15v12" fill="#85a68a"/><circle cx="81" cy="49" r="11" fill="#ed9e6d"/><path d="M65 88V74q0-15 16-15t16 15v14" fill="#ed9e6d"/></svg><span>家族共有</span></button>
-</div><div class="ud-home-links"><button type="button" onclick="openGuideModal()"><span aria-hidden="true">ⓘ</span> 使い方</button><button type="button" onclick="setAppScreen('settings')"><span aria-hidden="true">⚙</span> 設定</button></div></section>
+  <section id="ud-home" class="ud-home home-b" aria-labelledby="ud-home-title">
+    <h1 id="ud-home-title">週ぎめごはん</h1>
+    <p id="ud-home-budget" class="ud-home-budget"></p>
+    <button type="button" class="home-meal-hero" onclick="openTodayMealScreen()">
+      <span id="home-meal-action" class="home-meal-action">献立を見る <span aria-hidden="true">›</span></span>
+      <span class="home-meal-content"><span id="home-meal-label" class="home-meal-label">今日の主菜</span><span id="home-meal-title" class="home-meal-title"></span><span id="home-meal-day" class="home-meal-day"></span></span>
+      <svg class="home-rice-character" viewBox="0 0 200 210" aria-hidden="true" focusable="false"><ellipse cx="105" cy="191" rx="70" ry="10" fill="#003f33" opacity=".3"/><g stroke="#102f52" stroke-width="6" stroke-linejoin="round"><path d="M106 62Q83 43 97 22q24 0 28 29Q129 23 158 29q5 27-35 35" fill="#8fce32"/><path d="M119 57q0-14-15-25m20 22 22-14" fill="none" stroke="#fff8ce" stroke-width="3"/><path d="M32 121q-13-16 3-28-3-15 15-20 3-15 22-12 10-19 28-8 14-14 29 0 23-3 29 17 21 2 20 21 18 13 5 30" fill="#fffdf4"/><path d="M25 116q4 64 77 68 70-2 79-68Z" fill="#128ee5"/><path d="M47 128q9 36 40 43" fill="none" stroke="#70c7ff" stroke-width="9" stroke-linecap="round"/><path d="m76 183-4 11h61l-4-11" fill="#087ac9"/></g><circle cx="74" cy="96" r="6" fill="#102f52"/><circle cx="130" cy="96" r="6" fill="#102f52"/><path d="M93 106q9 10 18 0" fill="none" stroke="#102f52" stroke-width="5" stroke-linecap="round"/><ellipse cx="57" cy="108" rx="11" ry="6" fill="#ffb09c"/><ellipse cx="147" cy="108" rx="11" ry="6" fill="#ffb09c"/><g stroke="#ffd044" stroke-width="7" stroke-linecap="round"><path d="m165 8-7 16m29 0-12 12"/></g></svg>
+    </button>
+    <nav class="home-secondary" aria-label="家族と買い物のメニュー">
+      <button type="button" onclick="goToAppTab('shopping')"><svg viewBox="0 0 80 80" aria-hidden="true"><g stroke="#173852" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 36q-8-26 7-26 12 3 9 26m7 0q-1-23 15-22 13 11-2 22" fill="#92c850"/><circle cx="57" cy="33" r="11" fill="#ed896b"/><path d="m13 35 7 32h42l7-32Z" fill="#f5a18c"/><path d="M10 34h62M29 45v11m12-11v11m12-11v11" fill="none"/></g></svg><span>買い物</span><span class="home-nav-chevron" aria-hidden="true">›</span></button>
+      <button type="button" onclick="openPreferencesModal(false)"><svg viewBox="0 0 80 80" aria-hidden="true"><g stroke="#173852" stroke-width="4" stroke-linejoin="round"><circle cx="15" cy="44" r="7" fill="#f8d6b9"/><circle cx="65" cy="44" r="7" fill="#f8d6b9"/><circle cx="40" cy="43" r="25" fill="#f8d6b9"/><path d="M16 38Q10 12 37 13q29-2 28 25L52 26 40 30l-8-8Z" fill="#675141"/></g><circle cx="31" cy="44" r="3" fill="#173852"/><circle cx="49" cy="44" r="3" fill="#173852"/><path d="M34 54q6 7 12 0" fill="none" stroke="#173852" stroke-width="3" stroke-linecap="round"/><g fill="#f3a495"><ellipse cx="23" cy="52" rx="5" ry="3"/><ellipse cx="57" cy="52" rx="5" ry="3"/></g></svg><span>苦手食材</span><span class="home-nav-chevron" aria-hidden="true">›</span></button>
+      <button type="button" onclick="openSyncModal()"><svg viewBox="0 0 80 80" aria-hidden="true"><g stroke="#173852" stroke-width="3.5" stroke-linejoin="round"><circle cx="25" cy="28" r="17" fill="#f8d6b9"/><path d="M9 26q-2-23 21-16 13 1 12 18L29 17 18 20Z" fill="#69523e"/><circle cx="56" cy="31" r="17" fill="#f8d6b9"/><path d="M39 32q-4-22 17-21 23 0 18 28l-9-18-12 8Z" fill="#69523e"/><circle cx="39" cy="58" r="17" fill="#f8d6b9"/><path d="M23 55q-1-21 19-15 15 0 14 17l-12-10-10 6Z" fill="#69523e"/></g><g fill="#173852"><circle cx="20" cy="29" r="2"/><circle cx="30" cy="29" r="2"/><circle cx="51" cy="32" r="2"/><circle cx="61" cy="32" r="2"/><circle cx="34" cy="59" r="2"/><circle cx="44" cy="59" r="2"/></g><g fill="none" stroke="#173852" stroke-width="2.5" stroke-linecap="round"><path d="M22 36q3 3 6 0m25 3q3 3 6 0M36 65q3 3 6 0"/></g></svg><span>家族共有</span><span class="home-nav-chevron" aria-hidden="true">›</span></button>
+    </nav>
+    <div class="ud-home-links"><button type="button" onclick="openGuideModal()"><span aria-hidden="true">ⓘ</span> 使い方</button><button type="button" onclick="setAppScreen('settings')"><span aria-hidden="true">⚙</span> 設定</button></div>
+  </section>
   <header id="ud-workspace" class="ud-workspace" hidden>
     <button type="button" class="ud-home-back" onclick="returnAppHome()"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 11 12 2l10 9h-3v11h-5v-7h-4v7H5V11Z" fill="currentColor"/></svg><span>ホーム</span></button>
     <h1 id="ud-page-title" tabindex="-1">今週の献立</h1>
@@ -1733,14 +1763,14 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261027_share_layout"></script>
-  <script src="app.js?v=20261027_share_layout"></script>
+  <script src="recipes.js?v=20261028_home_b"></script>
+  <script src="app.js?v=20261028_home_b"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261027_share_layout', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261028_home_b', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();
@@ -1773,6 +1803,7 @@ body[data-screen="weekly"] button:focus-visible,body[data-screen="weekly"] summa
 </body>
 
 </html>
+
 
 
 

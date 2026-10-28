@@ -4958,11 +4958,29 @@ window.deleteCustomRecipe = function(id, event) {
 // Universal-design navigation: sparse home, one task per screen.
 let setupDraft = { servings: 4, budget: 8000 };
 const UD_SETUP_KEY = 'frugal_meal_setup_complete_v1';
+function getTodayMealIndex(date = new Date()) {
+  return (date.getDay() + 6) % 7;
+}
 function updateHomeBudget() {
   const el = document.getElementById('ud-home-budget');
-  if (!el) return;
-  el.textContent = state.weeklyPlan ? `今週 ${Number(state.targetBudget).toLocaleString()}円・${state.servings}人分` : '予算に合わせて、家族の献立を';
+  if (el) el.textContent = state.weeklyPlan ? `週予算 ${Number(state.targetBudget).toLocaleString()}円・${state.servings}人分` : '予算に合わせて、家族の献立を';
+  const action = document.getElementById('home-meal-action');
+  const label = document.getElementById('home-meal-label');
+  const title = document.getElementById('home-meal-title');
+  const dayText = document.getElementById('home-meal-day');
+  if (!action || !label || !title || !dayText) return;
+  const day = DAYS_OF_WEEK[getTodayMealIndex()];
+  const recipe = getRecipeById(state.weeklyPlan?.[day.id]?.main);
+  action.textContent = recipe ? '献立を見る ›' : '献立を作る ›';
+  label.textContent = recipe ? '今日の主菜' : '家族に合わせて';
+  title.textContent = recipe ? getCleanTitle(recipe) : '予算と人数から、１週間分をまとめて';
+  dayText.textContent = recipe ? day.name : '苦手な食材も設定できます';
 }
+window.openTodayMealScreen = function() {
+  state.activeSwipeDayIndex = getTodayMealIndex();
+  openMealScreen();
+};
+
 function syncAppScreen() {
   updateHomeBudget();
   const screen = state.activeTab;
@@ -5057,3 +5075,7 @@ function setupUniversalNavigation() {
 
 
 
+
+
+// Recheck the day when a home-screen app returns after midnight.
+ document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});

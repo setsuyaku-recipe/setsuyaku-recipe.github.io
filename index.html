@@ -42,7 +42,7 @@
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="食費節約献立＆買い物リスト作成マスター｜子育て家庭向け">
+  <meta name="twitter:title" content="週ぎめごはん｜予算に合わせた献立と買い物リスト">
   <meta name="twitter:description" content="完全無料！1週間の予算に合わせて、子供が喜ぶ偏らない節約献立＆売り場別買い物リストを一瞬で自動作成！夫婦・家族間共有対応。">
   <meta name="twitter:image" content="https://setsuyaku-recipe.github.io/ogp.png">
   <link rel="canonical" href="https://setsuyaku-recipe.github.io/">
@@ -55,7 +55,7 @@
       {
         "@type": "WebApplication",
         "@id": "https://setsuyaku-recipe.github.io/#webapp",
-        "name": "食費節約レシピまとめ集（食費節約献立＆買い物リスト作成）",
+        "name": "週ぎめごはん",
         "url": "https://setsuyaku-recipe.github.io/",
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "All",
@@ -968,6 +968,17 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
 .weekly-display-switch button[aria-pressed="true"]::after{content:"";position:absolute;inset:7px 2px;background:#2c654f;border-radius:7px;z-index:-1;pointer-events:none}
 .weekly-display-switch button::before{width:9px;flex-basis:9px;font-size:10px}
 .ud-title-row{gap:4px 10px;margin-bottom:4px}
+
+.shopping-budget-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding:10px 12px;background:#f0f3e9;border-radius:12px;color:#285c47}
+.shopping-budget-caption{font-size:12px;font-weight:500}.shopping-budget-summary .shopping-budget-note{font-size:24px;line-height:1.4;font-weight:700;margin:0}
+.shopping-explanation{position:relative;flex:0 0 44px}.shopping-explanation>summary{display:flex;align-items:center;justify-content:center;list-style:none;width:44px;min-height:44px;font-size:23px;cursor:pointer}.shopping-explanation>summary::-webkit-details-marker{display:none}.shopping-explanation[open]{position:static}.shopping-explanation>div{position:absolute;left:16px;right:16px;z-index:35;background:#fffdf7;border:1px solid #c5d2bc;padding:14px;border-radius:12px;box-shadow:0 5px 18px #234d3026;color:#3d4c3f;font-size:14px;line-height:1.7}.shopping-explanation>div p+p{margin-top:10px}
+.shopping-actions{display:flex;flex-wrap:wrap;gap:8px;width:100%;align-items:center}.shopping-actions>button,.shopping-actions>label{min-height:44px;white-space:nowrap;padding:7px 10px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto}
+#panel-shopping .shopping-actions label>span:last-child{max-width:none;text-align:left;white-space:nowrap;flex-shrink:0}
+#modal-preferences :has(>label[for="modal-children-count-select"]){background:#f2f5ec!important;border-color:#cedac6!important}#modal-preferences label[for="modal-children-count-select"],#modal-children-count-select{color:#285c47!important}#modal-children-count-select{background:#f9fbf5!important;border-color:#b8cbb0!important}
+.sharing-home-back{display:flex;align-items:center;gap:8px;align-self:flex-start;min-height:44px;margin-bottom:8px;background:none;color:#285c47;font-size:15px;font-weight:600}
+.home-meal-title,.ud-guide-steps strong,.ud-guide-steps p{word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}.home-title-phrase{white-space:nowrap}.ud-guide-steps{list-style:decimal;padding-left:24px;display:grid;gap:16px}.ud-guide-steps p{font-size:15px;line-height:1.7;margin-top:4px}
+#ud-page-title,.reading-day-header h2{font-family:"Zen Maru Gothic",ui-rounded,sans-serif}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1126,7 +1137,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
       <div class="weekly-subtools">
 
         <button id="btn-print-weekly" onclick="triggerPrintWeeklyPlan()" class="weekly-print-btn" title="冷蔵庫に貼れるA4用紙1枚で印刷・PDF保存">
-          <span>🖨️</span><span>印刷</span>
+          <i data-lucide="printer" class="w-4 h-4" aria-hidden="true"></i><span>印刷</span>
         </button>
       </div>
 
@@ -1140,21 +1151,21 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
 
     <!-- ================= 2. 買い物リストタブ ================= -->
     <section id="panel-shopping" role="tabpanel" aria-labelledby="tab-shopping" tabindex="0" class="tab-content hidden" hidden>
-      <p id="shopping-budget-remaining" class="shopping-budget-note"></p><p class="shopping-quantity-note">買う量の目安です。人参は1本150g、豆腐は1丁300gで換算。商品の大きさに合わせて調整してください。</p>
+      <div class="shopping-budget-summary"><div><span class="shopping-budget-caption">週予算と献立目安の差額</span><p id="shopping-budget-remaining" class="shopping-budget-note"></p></div><details class="shopping-explanation"><summary aria-label="金額と数量の見方">ⓘ</summary><div><p>選択した曜日の献立から計算した目安です。実際の購入額や使える残金ではありません。買い足しメモの金額は含みません。</p><p>買う量の目安として、人参は1本150g、豆腐は1丁300gで換算。商品の大きさに合わせて調整してください。</p></div></details></div>
       <!-- 最上段：買い物タイトル＆即座に操作できるスリムバー（スクロール不要で食材リスト直撃） -->
       <div class="mb-2 sm:mb-2.5 flex items-center justify-between gap-2 flex-wrap bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div class="flex items-center gap-2">
           <h2 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-1.5">
-            <span>🛒 買い物リスト</span>
+            <i data-lucide="shopping-basket" class="w-5 h-5" aria-hidden="true"></i><span>買い物リスト</span>
           </h2>
           <span id="shopping-estimated-budget" class="text-xs font-black text-teal-700 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200 whitespace-nowrap">約 ¥4,450</span>
         </div>
 
-        <div class="flex items-center gap-1.5 ml-auto flex-wrap">
+        <div class="shopping-actions">
           <!-- 調味料非表示スイッチ -->
           <label class="inline-flex items-center gap-1 cursor-pointer select-none text-[11px] font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded-xl border border-slate-200 transition-colors">
             <input type="checkbox" id="chk-hide-seasonings" class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-400 accent-indigo-600 cursor-pointer">
-            <span>🧂 基本調味料を隠す</span>
+            <span>基本調味料を隠す</span>
           </label>
           <!-- LINEで送る -->
           <button id="btn-share-line" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold text-white bg-[#06C755] hover:bg-[#05b34c] shadow-2xs active:scale-95 cursor-pointer">
@@ -1168,7 +1179,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
           </button>
           <!-- 印刷 -->
           <button id="btn-print-shopping" onclick="triggerPrintWeeklyPlan()" class="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-2xs active:scale-95 cursor-pointer" title="買い物リストを印刷">
-            <span>🖨️</span>
+            <i data-lucide="printer" class="w-4 h-4" aria-hidden="true"></i>
           </button>
           <!-- チェック解除 -->
           <button id="btn-clear-checked" class="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-2xs active:scale-95 cursor-pointer">
@@ -1460,7 +1471,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
 
         <div class="flex flex-col gap-1 bg-white p-2 rounded-xl border border-amber-100 shadow-2xs">
           <label for="modal-children-count-select" class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-            <span>👶</span> 設定する子どもの人数
+            <i data-lucide="baby" class="w-4 h-4" aria-hidden="true"></i> 設定する子どもの人数
           </label>
           <select id="modal-children-count-select" class="bg-amber-50/50 border border-amber-200 text-amber-950 font-black text-xs rounded-lg px-2 py-1 focus:ring-amber-400 cursor-pointer">
             <option value="0">0人（大人・夫婦のみ）</option>
@@ -1667,11 +1678,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
   <div id="modal-guide" class="fixed inset-0 z-50 bg-slate-900/60 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="ud-guide-title">
     <div class="bg-white rounded-3xl p-6 max-w-lg w-full" style="max-height:90svh;overflow:auto;color:#173f33">
       <h2 id="ud-guide-title" style="font-size:24px;font-weight:800;margin-bottom:24px">使い方</h2>
-      <ol style="display:grid;gap:24px;font-size:16px;line-height:1.8;padding-left:20px;list-style:decimal">
-        <li><strong>やりたいことを選ぶ</strong><p>ホームの「献立」「買い物」「苦手食材」「家族共有」から選びます。</p></li>
-        <li><strong>初回は人数と予算を設定</strong><p>「献立」を開き、条件を決めて作成します。次回からは設定を覚えています。</p></li>
-        <li><strong>献立から買い物へ</strong><p>料理の「作り方」を確認できます。「買い物リストへ」で必要な食材を確認できます。</p></li>
-      </ol>
+      <ol class="ud-guide-steps"><li><strong>献立を作る・見る</strong><p>ホームの大きな献立カードから開きます。初回は予算と人数を設定します。</p></li><li><strong>家族に合わせる</strong><p>「苦手食材」で子どもごとに登録。献立の「この１品を変更」で入れ替えられます。</p></li><li><strong>買い物へ進む</strong><p>ホームの「買い物」から、売り場別のリストを開けます。</p></li></ol>
       <p style="margin:24px 0;font-size:16px">迷ったら「ホーム」で戻れます。</p>
       <button id="btn-start-using" type="button" class="ud-primary" onclick="closeGuideModal()">閉じる</button>
     </div>
@@ -1766,6 +1773,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
   <!-- ==================== モーダル: 家族共有（自動生成コード・QR同期） ==================== -->
   <div id="modal-sync" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col p-5 sm:p-6 border border-indigo-100 max-h-[92vh] overflow-y-auto">
+      <button type="button" class="sharing-home-back" onclick="returnAppHome()"><i data-lucide="house" class="w-5 h-5" aria-hidden="true"></i>ホームへ戻る</button>
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl shrink-0">
@@ -1795,8 +1803,8 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_compact_switch"></script>
-  <script src="app.js?v=20261028_compact_switch"></script>
+  <script src="recipes.js?v=20261028_consistent_details"></script>
+  <script src="app.js?v=20261028_consistent_details"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1806,7 +1814,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_compact_switch', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261028_consistent_details', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;
@@ -1830,6 +1838,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
 </body>
 
 </html>
+
 
 
 

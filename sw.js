@@ -1,6 +1,6 @@
 // Service Worker for 週ぎめごはん (PWA)
 // 更新時に旧画面が残らないことを最優先したキャッシュ戦略
-const CACHE_VERSION = '20261028_compact_switch';
+const CACHE_VERSION = '20261028_consistent_details';
 const CACHE_PREFIX = 'setsuyaku-recipe-';
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -8,6 +8,7 @@ const PRECACHE_ASSETS = [
   './assets/gohan-kun.webp',
   './',
   './index.html',
+  './privacy.html',
   './recipes.js',
   './app.js',
   './manifest.json',
@@ -146,3 +147,4 @@ self.addEventListener('fetch', event => {
     return response;
   })());
 });
+

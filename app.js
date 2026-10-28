@@ -2510,7 +2510,7 @@ function updateSummaryBadge() {
   const shoppingBudgetEl = document.getElementById('shopping-estimated-budget');
   if (shoppingBudgetEl) shoppingBudgetEl.textContent = `献立の目安 約${shoppingCost.toLocaleString()}円`;
   const remaining = document.getElementById('shopping-budget-remaining');
-  if (remaining) {const diff = state.targetBudget - shoppingCost;remaining.textContent = `週予算まで${diff >= 0 ? 'あと' : '超過'} ${Math.abs(diff).toLocaleString()}円（選択した曜日の献立目安・実際の購入額ではありません）`;}
+  if (remaining) {const diff = state.targetBudget - shoppingCost;remaining.textContent = `${diff >= 0 ? '予算まであと' : '予算を超過'} ${Math.abs(diff).toLocaleString()}円`;}
 }
 
 function updatePreferenceBadge() {
@@ -4966,6 +4966,20 @@ window.deleteCustomRecipe = function(id, event) {
 // Universal-design navigation: sparse home, one task per screen.
 let setupDraft = { servings: 4, budget: 8000 };
 const UD_SETUP_KEY = 'frugal_meal_setup_complete_v1';
+function setHomeMealTitle(element, text) {
+  element.textContent = text;
+  if (!element.ownerDocument) return;
+  const doc = element.ownerDocument;
+  const fragment = doc.createDocumentFragment();
+  const phrases = /((?:マイルド|甘口|麻婆豆腐|照り焼き|つくね|苦手食材))/g;
+  for (const part of text.split(phrases)) {
+    if (!part) continue;
+    if (/^(マイルド|甘口|麻婆豆腐|照り焼き|つくね|苦手食材)$/.test(part)) {
+      const span = doc.createElement('span');span.className='home-title-phrase';span.textContent=part;fragment.appendChild(span);
+    } else fragment.appendChild(doc.createTextNode(part));
+  }
+  element.replaceChildren(fragment);
+}
 function getTodayMealIndex(date = new Date()) {
   return (date.getDay() + 6) % 7;
 }
@@ -4981,7 +4995,7 @@ function updateHomeBudget() {
   const recipe = getRecipeById(state.weeklyPlan?.[day.id]?.main);
   action.textContent = recipe ? '献立を見る ›' : '献立を作る ›';
   label.textContent = recipe ? '今日の主菜' : '家族に合わせて';
-  title.textContent = recipe ? getCleanTitle(recipe) : '予算と人数から、１週間分をまとめて';
+  setHomeMealTitle(title, recipe ? getCleanTitle(recipe) : '予算と人数から、１週間分をまとめて');
   dayText.textContent = recipe ? day.name : '苦手な食材も設定できます';
 }
 window.openTodayMealScreen = function() {
@@ -5096,4 +5110,5 @@ function setupUniversalNavigation() {
 
 // Recheck the day when a home-screen app returns after midnight.
  document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});
+
 

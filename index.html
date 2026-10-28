@@ -28,7 +28,7 @@
 
   <!-- SEO メタタグ -->
   <title>週ぎめごはん｜予算ぴったりの1週間献立と買い物リスト</title>
-  <meta name="description" content="子育て家庭（1〜7人対応）に特化した、1週間分の節約献立と買い物リストを自動作成する完全無料ツール。予算ぴったりの献立作成、子供の苦手食材除外、レトルト・時短お助けメニュー、スーパー売り場別の買い物リスト自動合算＆家族共有に対応。">
+  <meta name="description" content="子育て家庭（1〜7人対応）に特化した、1週間分の節約献立と買い物リストを自動作成する完全無料ツール。夕食7日分の予算に合わせた献立作成、子供の苦手食材除外、レトルト・時短お助けメニュー、スーパー売り場別の買い物リスト自動合算＆家族共有に対応。">
   <meta name="keywords" content="週ぎめごはん, 食費節約, 献立, 買い物リスト, 1週間献立, 節約レシピ, 子供の好き嫌い, まとめ買い, 家族共有">
   <meta name="author" content="AOBA">
 
@@ -993,6 +993,8 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
 @media(max-width:420px){body .weekly-dish-main .meal-title{font-size:21px}body .weekly-dish-side .meal-title,body .weekly-dish-soup .meal-title{font-size:19px}}
 
 .meal-preference-warning{font-size:13px;line-height:1.6;color:#763e15;background:#fff3d7;border:1px solid #dfc18e;border-radius:6px;padding:8px;margin:0 0 10px;font-weight:500}.preference-conflict-notice{order:0;width:100%;box-sizing:border-box;font-size:14px;line-height:1.7;padding:12px;border:1px solid #dfc18e;border-radius:10px;background:#fff6df;color:#6c421a;margin:0 0 12px}
+.budget-scope-short{clear:both;font-size:14px;line-height:1.6;color:#52644d;margin:0 0 12px}.budget-scope{font-size:14px;line-height:1.7;color:#465f49;margin:0 0 18px}.budget-scope summary{min-height:44px;cursor:pointer;padding:10px 0}.budget-scope p{margin-top:8px}.weekly-generation-notice{order:0;font-size:14px;line-height:1.7;border:1px solid #d8ba83;background:#fff5dd;color:#68431f;padding:12px;border-radius:10px;margin:0 0 12px;width:100%;box-sizing:border-box}
+.weekly-estimate-status{order:0;font-size:14px;line-height:1.6;color:#32624b;margin:0 0 10px}.weekly-estimate-status[data-over-budget="true"]{color:#78451f;background:#fff3dd;padding:8px 10px;border-radius:8px}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1117,9 +1119,10 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
     <section id="ud-setup" class="ud-setup" hidden aria-labelledby="ud-page-title">
       <form onsubmit="event.preventDefault();saveMealSetup()">
         <fieldset class="ud-field"><legend>家族の人数</legend><div class="ud-stepper"><button id="ud-minus" type="button" onclick="stepSetupServings(-1)" aria-label="人数を1人減らす">−</button><output id="ud-servings" aria-live="polite">4人</output><button id="ud-plus" type="button" onclick="stepSetupServings(1)" aria-label="人数を1人増やす">＋</button></div></fieldset>
-        <fieldset class="ud-field"><legend>1週間の予算</legend><div class="ud-budgets">
+        <fieldset class="ud-field"><legend>夕食７日分の予算</legend><p class="budget-scope-short">主菜・副菜・汁物の材料費の目安です。</p><div class="ud-budgets">
           <button type="button" data-ud-budget="6000" onclick="pickSetupBudget(6000)">6,000円</button><button type="button" data-ud-budget="8000" onclick="pickSetupBudget(8000)">8,000円</button><button type="button" data-ud-budget="10000" onclick="pickSetupBudget(10000)">10,000円</button>
-        </div><details class="ud-custom-budget"><summary>金額を入力</summary><label for="ud-budget-input">1週間の予算（円）</label><input id="ud-budget-input" type="number" inputmode="numeric" min="3000" max="30000" step="100" oninput="readSetupBudget(this.value)"></details></fieldset>
+        </div><details class="ud-custom-budget"><summary>金額を入力</summary><label for="ud-budget-input">夕食７日分の予算（円）</label><input id="ud-budget-input" type="number" inputmode="numeric" min="3000" max="30000" step="100" oninput="readSetupBudget(this.value)"></details></fieldset>
+        <details class="budget-scope"><summary>予算に含まれるもの</summary><p>夕食７日分の主菜・副菜・汁物を、レシピごとの目安金額で計算します。朝食・昼食・おやつ・飲み物や、レシピ材料にない米・パンなどは含みません。</p><p>実際の購入額ではありません。地域・時期・商品の容量や手持ちの食材によって、店で支払う金額は変わります。</p></details>
         <p id="ud-setup-error" class="ud-error" role="alert"></p><button type="submit" class="ud-primary">この条件で献立を作る <span aria-hidden="true">›</span></button>
       </form>
     </section>
@@ -1156,6 +1159,8 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
       </div>
 
       <button type="button" class="ud-recipe-link" onclick="goToAppTab('recipes')">レシピを探す ›</button>
+      <p id="weekly-estimate-status" class="weekly-estimate-status" role="status" hidden></p>
+      <p id="weekly-generation-notice" role="alert" class="weekly-generation-notice" hidden></p>
       <p id="preference-conflict-notice" class="preference-conflict-notice" role="status" hidden></p>
       <!-- 献立カードコンテナ（JSで1日カード or 7日グリッドを動的レンダリング） -->
       <div id="weekly-plan-container">
@@ -1166,7 +1171,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
 
     <!-- ================= 2. 買い物リストタブ ================= -->
     <section id="panel-shopping" role="tabpanel" aria-labelledby="tab-shopping" tabindex="0" class="tab-content hidden" hidden>
-      <div class="shopping-budget-summary"><div><span class="shopping-budget-caption">週予算と献立目安の差額</span><p id="shopping-budget-remaining" class="shopping-budget-note"></p></div><details class="shopping-explanation"><summary aria-label="金額と数量の見方">ⓘ</summary><div><p>選択した曜日の献立から計算した目安です。実際の購入額や使える残金ではありません。買い足しメモの金額は含みません。</p><p>買う量の目安として、人参は1本150g、豆腐は1丁300gで換算。商品の大きさに合わせて調整してください。</p></div></details></div>
+      <div class="shopping-budget-summary"><div><span class="shopping-budget-caption">週予算と献立目安の差額</span><p id="shopping-budget-remaining" class="shopping-budget-note"></p></div><details class="shopping-explanation"><summary aria-label="金額と数量の見方">ⓘ</summary><div><p>夕食の主菜・副菜・汁物について、選択した曜日の献立から計算した目安です。朝食・昼食・おやつ・飲み物や、レシピ材料にない米・パンなどは含みません。実際の購入額や使える残金ではありません。買い足しメモの金額は含みません。</p><p>買う量の目安として、人参は1本150g、豆腐は1丁300gで換算。商品の大きさに合わせて調整してください。</p></div></details></div>
       <!-- 最上段：買い物タイトル＆即座に操作できるスリムバー（スクロール不要で食材リスト直撃） -->
       <div class="mb-2 sm:mb-2.5 flex items-center justify-between gap-2 flex-wrap bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div class="flex items-center gap-2">
@@ -1818,8 +1823,8 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_preference_safety"></script>
-  <script src="app.js?v=20261029_preference_safety"></script>
+  <script src="recipes.js?v=20261029_budget_safety"></script>
+  <script src="app.js?v=20261029_budget_safety"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1829,7 +1834,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_preference_safety', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_budget_safety', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;
@@ -1853,6 +1858,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
 </body>
 
 </html>
+
 
 
 

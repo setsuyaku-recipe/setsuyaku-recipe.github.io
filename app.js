@@ -542,7 +542,41 @@ function calculatePlanTotalCost(plan, filterDays = null) {
 }
 
 // 予算マッチング＆30日重複なし＆お気に入り定期登板 献立生成エンジン
+let lastPlanGenerationError = '';
+function reportPlanGenerationError(message) {
+  lastPlanGenerationError = message;
+  const notice=document.getElementById('weekly-generation-notice');
+  if(notice){notice.textContent=message;notice.hidden=false;}
+  showToast(message);
+  return false;
+}
+function clearPlanGenerationError() {
+  lastPlanGenerationError='';
+  const notice=document.getElementById('weekly-generation-notice');
+  if(notice){notice.textContent='';notice.hidden=true;}
+}
+function buildLowCostPlan(pools) {
+  const sorted=pools.map(pool=>[...pool].sort((a,b)=>a.approxCostPerPerson-b.approxCostPerPerson));
+  const plan={};
+  DAYS_OF_WEEK.forEach((day,index)=>{
+    plan[day.id]={};
+    ['main','side','soup'].forEach((category,k)=>{
+      // Keep seven different recipes where possible; repeat only if the safe pool is smaller.
+      plan[day.id][category]=sorted[k][sorted[k].length >= 7 ? index : 0].id;
+    });
+  });
+  return plan;
+}
+function replacementPlanCost(dayId,category,newRecipeId) {
+  if(!state.weeklyPlan?.[dayId])return Infinity;
+  const old=getRecipeById(state.weeklyPlan[dayId][category]);
+  const next=getRecipeById(newRecipeId);
+  if(!next)return Infinity;
+  return calculatePlanTotalCost(state.weeklyPlan)+((Number(next.approxCostPerPerson)||0)-(Number(old?.approxCostPerPerson)||0))*state.servings;
+}
+
 function generateRandomWeeklyPlan(showNotify = true) {
+  clearPlanGenerationError();
 
 
   // 1. 除外（NG）レシピの排除 ＆ 苦手食材フィルタ
@@ -552,12 +586,8 @@ function generateRandomWeeklyPlan(showNotify = true) {
   let availableSoups = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'soup' && isNotBlacklisted(r)));
   const missing=[['主菜',availableMains],['副菜',availableSides],['汁物',availableSoups]].filter(x=>!x[1].length).map(x=>x[0]);
   if(missing.length) {
-    showToast(`苦手食材の条件に合う${missing.join('・')}がありません。献立は変更していません。設定をご確認ください。`);
-    return false;
+    return reportPlanGenerationError(`苦手食材の条件に合う${missing.join('・')}がありません。献立は変更していません。設定をご確認ください。`);
   }
-  state.cookedDays = [];
-  saveCookedDays();
-
   // 2. 季節フィルター（指定がある場合、該当季節または通年のものを優先）
   if (state.selectedSeason && state.selectedSeason !== 'all') {
     const filterBySeason = (list) => {
@@ -567,6 +597,12 @@ function generateRandomWeeklyPlan(showNotify = true) {
     availableMains = filterBySeason(availableMains);
     availableSides = filterBySeason(availableSides);
     availableSoups = filterBySeason(availableSoups);
+  }
+
+  const lowCostPlan=buildLowCostPlan([availableMains,availableSides,availableSoups]);
+  const lowCost=calculatePlanTotalCost(lowCostPlan);
+  if(lowCost>state.targetBudget){
+    return reportPlanGenerationError(`夕食7日分を予算${state.targetBudget.toLocaleString()}円以内で作成できませんでした。現在の条件で組み合わせた低価格の献立目安は約${lowCost.toLocaleString()}円です。予算は自動変更していません。`);
   }
 
   // 3. 直近30日間の重複防止フィルター（お気に入りレシピ以外は直近履歴にあるものを極力除外）
@@ -691,15 +727,20 @@ function generateRandomWeeklyPlan(showNotify = true) {
     });
 
     const cost = calculatePlanTotalCost(planCandidate);
-    const diff = Math.abs(cost - state.targetBudget);
+    const diff = state.targetBudget - cost;
 
-    if (diff < minCostDiff) {
+    if (cost <= state.targetBudget && diff < minCostDiff) {
       minCostDiff = diff;
       bestPlan = planCandidate;
       if (diff <= 100) break;
     }
   }
 
+  if(!bestPlan)bestPlan=lowCostPlan;
+  // Commit only after a complete permissible plan is found within the estimate budget.
+  state.cookedDays=[];
+  saveCookedDays();
+  clearPlanGenerationError();
   // 4. 生成したプランのレシピを直近履歴に追加（最大90件＝30日分保持）
   if (bestPlan) {
     const newUsedIds = [];
@@ -722,7 +763,7 @@ function generateRandomWeeklyPlan(showNotify = true) {
 
   if (showNotify) {
     const finalCost = calculatePlanTotalCost(bestPlan);
-    showToast(`目標予算【¥${state.targetBudget.toLocaleString()}】に合わせて被りなし献立（約¥${finalCost.toLocaleString()}）を作成しました！`);
+    showToast(`夕食7日分を予算${state.targetBudget.toLocaleString()}円以内の目安（約${finalCost.toLocaleString()}円）で作成しました`);
   }
 
   state.renderedTabs.weekly = false;
@@ -2455,8 +2496,10 @@ function updateSummaryBadge() {
   const weeklyTotalCost = state.weeklyPlan ? calculatePlanTotalCost(state.weeklyPlan) : 0;
   const target = state.targetBudget;
   const diff = weeklyTotalCost - target;
+  const status=document.getElementById('weekly-estimate-status');
+  if(status){status.hidden=!state.weeklyPlan;status.dataset.overBudget=String(diff>0);status.textContent=`夕食7日分の献立目安 約${weeklyTotalCost.toLocaleString()}円（${diff>0 ? '予算を'+diff.toLocaleString()+'円超過' : '予算内'}）`;}
   const balance = document.getElementById('budget-balance');
-  if (balance) balance.textContent = `${diff > 0 ? '今週の予算超過' : '今週の予算残り'} ¥${Math.abs(diff).toLocaleString()}`;
+  if (balance) balance.textContent = `${diff > 0 ? '今週の予算超過' : '週予算と献立目安の差額'} ¥${Math.abs(diff).toLocaleString()}`;
   const estimate = document.getElementById('budget-estimate');
   if (estimate) estimate.textContent = `予算 ¥${target.toLocaleString()} ／ 献立の予定額 ¥${weeklyTotalCost.toLocaleString()}`;
   const meter = document.getElementById('budget-meter');
@@ -2483,12 +2526,12 @@ function updateSummaryBadge() {
 
   const diffBadge = document.getElementById('badge-budget-diff');
   if (diffBadge) {
-    if (Math.abs(diff) <= 150) {
+    if (diff === 0) {
       diffBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800';
-      diffBadge.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> 予算ピッタリ（差額 ${diff >= 0 ? '+' : ''}¥${diff.toLocaleString()}）`;
+      diffBadge.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> 献立目安が予算と一致`;
     } else if (diff < 0) {
       diffBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-100 text-teal-800';
-      diffBadge.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 予算内！（¥${Math.abs(diff).toLocaleString()} お得）`;
+      diffBadge.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 予算内！（¥${Math.abs(diff).toLocaleString()}の差額）`;
     } else {
       diffBadge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900';
       diffBadge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> 予算＋¥${diff.toLocaleString()}`;
@@ -3005,29 +3048,25 @@ window.swapSingleDish = function(dayId, category) {
   let pool = RECIPES_DATA.filter(r => r && r.category === category && r.id !== old && !state.blacklistedRecipeIds.includes(r.id) &&
     Array.from({length:state.childrenCount}, (_,i) => state.childrenPreferences['child'+(i+1)] || {dislikes:[],disabledFlavors:[]}).every(pref => canChildEat(r,pref)));
   if (!pool.length) { showToast('条件に合う別の料理がありません'); return; }
-  // Prefer fresh alternatives, then recipes not already present in this week.
-  const fresh = pool.filter(r => !history.includes(r.id));
-  if (fresh.length) pool = fresh;
-  const unique = pool.filter(r => !used.has(r.id));
-  if (unique.length) pool = unique;
-  const oldCost = Number(getRecipeById(old)?.approxCostPerPerson) || 0;
-  const total = Object.values(state.weeklyPlan).reduce((sum,d) => sum + ['main','side','soup'].reduce((n,c) => n + (Number(getRecipeById(d[c])?.approxCostPerPerson)||0) * state.servings,0),0);
-  const within = pool.filter(r => total + (r.approxCostPerPerson-oldCost)*state.servings <= state.targetBudget);
-  if (within.length) pool = within;
-  else { const cheapest = Math.min(...pool.map(r=>r.approxCostPerPerson)); pool = pool.filter(r=>r.approxCostPerPerson===cheapest); }
+  pool=pool.filter(r=>replacementPlanCost(dayId,category,r.id)<=state.targetBudget);
+  if(!pool.length){showToast('苦手食材と週予算の両方に合う別の料理がありません。献立は変更していません');return;}
+  const fresh=pool.filter(r=>!history.includes(r.id));
+  if(fresh.length)pool=fresh;
+  const unique=pool.filter(r=>!used.has(r.id));
+  if(unique.length)pool=unique;
   const next = pool[Math.floor(Math.random()*pool.length)].id;
   mealSwapHistory.set(key, [...history,old].slice(-12));
   state.weeklyPlan[dayId][category] = next;
   mealSwapUndo = {dayId,category,old,next};
   commitMealSwap(dayId);
   renderMealSwapStatus();
-  const newTotal = total + ((Number(getRecipeById(next)?.approxCostPerPerson)||0)-oldCost)*state.servings;
-  if (newTotal > state.targetBudget) showToast('料理を変更しました。週の目安金額が予算を超えています');
+
 };
 window.undoSingleDish = function() {
   const u = mealSwapUndo;
   if (!u || state.weeklyPlan?.[u.dayId]?.[u.category] !== u.next) { mealSwapUndo=null;renderMealSwapStatus();return; }
   if(getRecipePreferenceConflicts(getRecipeById(u.old)).length){showToast('元の料理は現在の苦手食材の設定に合わないため戻せません');return;}
+  if(replacementPlanCost(u.dayId,u.category,u.old)>state.targetBudget){showToast('元の料理に戻すと週予算の目安を超えるため、戻していません');return;}
   state.weeklyPlan[u.dayId][u.category] = u.old;
   mealSwapUndo = null;
   commitMealSwap(u.dayId);
@@ -3042,11 +3081,21 @@ window.shuffleDayMenu = function(dayId) {
   const soups = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'soup' && isNotBlacklisted(r)));
 
   if(!state.weeklyPlan?.[dayId] || !mains.length || !sides.length || !soups.length){showToast('条件に合う料理が足りないため、この日の献立は変更していません');return;}
-  state.weeklyPlan[dayId] = {
-    main: mains.length > 0 ? mains[Math.floor(Math.random() * mains.length)].id : 'main_01',
-    side: sides.length > 0 ? sides[Math.floor(Math.random() * sides.length)].id : 'side_01',
-    soup: soups.length > 0 ? soups[Math.floor(Math.random() * soups.length)].id : 'soup_01'
-  };
+  let selected=null;
+  const original=state.weeklyPlan[dayId];
+  const weekRest=calculatePlanTotalCost(state.weeklyPlan)-['main','side','soup'].reduce((sum,key)=>sum+(getRecipeById(original[key])?.approxCostPerPerson||0)*state.servings,0);
+  const fits=day=>weekRest+['main','side','soup'].reduce((sum,key)=>sum+getRecipeById(day[key]).approxCostPerPerson*state.servings,0)<=state.targetBudget;
+  for(let i=0;i<40;i++){
+    const day={main:mains[Math.floor(Math.random()*mains.length)].id,side:sides[Math.floor(Math.random()*sides.length)].id,soup:soups[Math.floor(Math.random()*soups.length)].id};
+    if(fits(day)){selected=day;break;}
+  }
+  if(!selected){
+    const cheapest=pool=>pool.reduce((best,r)=>r.approxCostPerPerson<best.approxCostPerPerson?r:best);
+    const day={main:cheapest(mains).id,side:cheapest(sides).id,soup:cheapest(soups).id};
+    if(fits(day))selected=day;
+  }
+  if(!selected){showToast('週予算の目安に収まる組み合わせがないため、この日の献立は変更していません');return;}
+  state.weeklyPlan[dayId]=selected;
 
   savePlan();
   state.renderedTabs.weekly = false;
@@ -3120,7 +3169,7 @@ window.toggleBlacklist = function(recipeId, event) {
           if (dayData[cat] === recipeId) {
             const candidates = filterRecipesByDislikes(
               RECIPES_DATA.filter(r => r.category === cat && isNotBlacklisted(r) && r.id !== recipeId)
-            );
+            ).filter(r=>replacementPlanCost(day.id,cat,r.id)<=state.targetBudget);
             if (candidates.length > 0) {
               const replacement = candidates[Math.floor(Math.random() * candidates.length)];
               dayData[cat] = replacement.id;
@@ -4719,6 +4768,7 @@ function renderChangeRecipeList() {
 
   const { dayId, category } = state.changeTarget;
   let recipes = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === category && !state.blacklistedRecipeIds.includes(r.id)));
+  recipes=recipes.filter(r=>replacementPlanCost(dayId,category,r.id)<=state.targetBudget);
   const currentId = state.weeklyPlan[dayId][category];
 
   // 簡易カテゴリフィルタ（第14条: おまかせ / 肉系 / 魚系 / その他）
@@ -4733,7 +4783,7 @@ function renderChangeRecipeList() {
   if (recipes.length === 0) {
     listContainer.innerHTML = `
       <div class="text-center py-8 text-slate-400 text-xs">
-        苦手食材と現在の条件に合う料理がありません。条件をご確認ください。
+        苦手食材・週予算と現在の条件に合う料理がありません。条件をご確認ください。
       </div>
     `;
     return;
@@ -4805,6 +4855,7 @@ window.selectAlternativeRecipe = function(newRecipeId) {
   const candidate=getRecipeById(newRecipeId);
   if(!candidate || candidate.category!==category || state.blacklistedRecipeIds.includes(newRecipeId) || getRecipePreferenceConflicts(candidate).length){showToast('現在の苦手食材の条件に合わないため変更できません');return;}
   if(!state.weeklyPlan?.[dayId])return;
+  if(replacementPlanCost(dayId,category,newRecipeId)>state.targetBudget){showToast('週予算の目安を超えるため変更していません');return;}
   state.weeklyPlan[dayId][category] = newRecipeId;
 
   savePlan();
@@ -5024,7 +5075,7 @@ function getTodayMealIndex(date = new Date()) {
 }
 function updateHomeBudget() {
   const el = document.getElementById('ud-home-budget');
-  if (el) el.textContent = state.weeklyPlan ? `週予算 ${Number(state.targetBudget).toLocaleString()}円・${state.servings}人分` : '予算に合わせて、家族の献立を';
+  if (el) el.textContent = state.weeklyPlan ? `夕食の週予算 ${Number(state.targetBudget).toLocaleString()}円・${state.servings}人分` : '予算に合わせて、家族の献立を';
   const action = document.getElementById('home-meal-action');
   const label = document.getElementById('home-meal-label');
   const title = document.getElementById('home-meal-title');
@@ -5120,7 +5171,7 @@ window.saveMealSetup = function() {
   state.servings=setupDraft.servings;state.targetBudget=setupDraft.budget;
   if(generateRandomWeeklyPlan(false)===false){
     state.servings=previous.servings;state.targetBudget=previous.budget;
-    document.getElementById('ud-setup-error').textContent='苦手食材の条件に合う料理が足りません。条件を確認してください。';return;
+    document.getElementById('ud-setup-error').textContent=lastPlanGenerationError || '条件に合う献立を作れませんでした。設定をご確認ください。';return;
   }
   saveServings();saveBudget();localStorage.setItem(UD_SETUP_KEY,'true');setAppScreen('weekly');
 };
@@ -5161,6 +5212,7 @@ function setupUniversalNavigation() {
 
 // Recheck the day when a home-screen app returns after midnight.
  document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});
+
 
 
 

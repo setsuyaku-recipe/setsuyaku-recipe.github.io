@@ -94,7 +94,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script defer src="https://unpkg.com/lucide@latest"></script>
   <style>
     /* Keep install control hidden before CDN styles and app initialization. */
     #btn-install-pwa.hidden { display: none !important; }
@@ -948,7 +948,7 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
     <button type="button" class="home-meal-hero" onclick="openTodayMealScreen()">
       <span id="home-meal-action" class="home-meal-action">献立を見る <span aria-hidden="true">›</span></span>
       <span class="home-meal-content"><span id="home-meal-label" class="home-meal-label">今日の主菜</span><span id="home-meal-title" class="home-meal-title"></span><span id="home-meal-day" class="home-meal-day"></span></span>
-      <img class="home-rice-character" src="assets/gohan-kun-complete.png" width="1280" height="1280" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+      <img class="home-rice-character" src="assets/gohan-kun.webp" width="480" height="480" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
     </button>
     <nav class="home-secondary" aria-label="家族と買い物のメニュー">
       <button type="button" onclick="goToAppTab('shopping')"><svg viewBox="0 0 80 80" aria-hidden="true"><g stroke="#173852" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 36q-8-26 7-26 12 3 9 26m7 0q-1-23 15-22 13 11-2 22" fill="#92c850"/><circle cx="57" cy="33" r="11" fill="#ed896b"/><path d="m13 35 7 32h42l7-32Z" fill="#f5a18c"/><path d="M10 34h62M29 45v11m12-11v11m12-11v11" fill="none"/></g></svg><span>買い物</span><span class="home-nav-chevron" aria-hidden="true">›</span></button>
@@ -1764,46 +1764,42 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_gohan_complete"></script>
-  <script src="app.js?v=20261028_gohan_complete"></script>
+  <script src="recipes.js?v=20261028_performance"></script>
+  <script src="app.js?v=20261028_performance"></script>
 
-  <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
+  <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
     if ('serviceWorker' in navigator) {
+      let requestedUpdate = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (requestedUpdate) window.location.reload();
+      });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_gohan_complete', { updateViaCache: 'none' })
-          .then((reg) => {
-            // 起動時にサーバーへ即座に更新チェック
-            reg.update();
-
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('New version ready! Auto updating...');
-                    window.location.reload();
-                  }
-                });
-              }
+        navigator.serviceWorker.register('./sw.js?v=20261028_performance', {updateViaCache:'none'}).then(reg => {
+          const offer = () => {
+            if (!reg.waiting) return;
+            document.getElementById('app-update-notice').hidden = false;
+            document.getElementById('app-update-apply').onclick = () => {
+              if (!reg.waiting) return;
+              requestedUpdate = true;
+              reg.waiting.postMessage({type:'SKIP_WAITING'});
+            };
+          };
+          offer();
+          reg.addEventListener('updatefound', () => {
+            const worker = reg.installing;
+            if (worker) worker.addEventListener('statechange', () => {
+              if(worker.state === 'installed' && navigator.serviceWorker.controller) offer();
             });
-          })
-          .catch((err) => console.warn('PWA ServiceWorker registration failed:', err));
-
-        // 新しいService Workerが有効化されたら自動リロード
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
+          });
+        }).catch(err => console.warn('PWA registration:',err));
       });
     }
   </script>
 </body>
 
 </html>
+
 
 
 

@@ -1,11 +1,11 @@
 // Service Worker for 週ぎめごはん (PWA)
 // 更新時に旧画面が残らないことを最優先したキャッシュ戦略
-const CACHE_VERSION = '20261028_gohan_complete';
+const CACHE_VERSION = '20261028_performance';
 const CACHE_PREFIX = 'setsuyaku-recipe-';
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
-  './assets/gohan-kun-complete.png',
+  './assets/gohan-kun.webp',
   './',
   './index.html',
   './recipes.js',
@@ -39,7 +39,7 @@ self.addEventListener('install', (event) => {
       })
     );
 
-    await self.skipWaiting();
+    // An existing session activates updates only after the user chooses Update.
   })());
 });
 
@@ -56,7 +56,7 @@ self.addEventListener('activate', (event) => {
 
     if ('navigationPreload' in self.registration) {
       try {
-        await self.registration.navigationPreload.enable();
+        await self.registration.navigationPreload.disable();
       } catch (_) {}
     }
 
@@ -128,56 +128,21 @@ async function networkFirstFresh(request, preloadResponsePromise) {
   }
 }
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('message', event => {
+  if(event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
-
-  if (request.method !== 'GET' || isExternalNoCache(url)) {
-    return;
-  }
-
-  // 外部CDNは更新頻度が低いため Cache First。
-  if (isExternalStatic(url)) {
-    event.respondWith((async () => {
-      const cached = await caches.match(request);
-      if (cached) return cached;
-
-      const response = await fetch(request);
-      if (response && response.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, response.clone());
-      }
-      return response;
-    })());
-    return;
-  }
-
-  // HTML / app.js / recipes.js / manifest は常に最新版を優先。
-  if (isCoreAppRequest(url, request)) {
-    event.respondWith(networkFirstFresh(request, event.preloadResponse));
-    return;
-  }
-
-  // 同一オリジンの画像等は Network First。
-  if (url.origin === self.location.origin) {
-    event.respondWith((async () => {
-      try {
-        const response = await fetch(request, { cache: 'no-cache' });
-        if (response && response.ok) {
-          const cache = await caches.open(CACHE_NAME);
-          await cache.put(request, response.clone());
-        }
-        return response;
-      } catch (_) {
-        return caches.match(request, { ignoreSearch: true });
-      }
-    })());
-  }
+  if(request.method !== 'GET' || isExternalNoCache(url)) return;
+  if(url.origin !== self.location.origin && !isExternalStatic(url)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // Every app release has a complete, separate cache. Never mix script versions.
+    const cached = await cache.match(request, {ignoreSearch:url.origin === self.location.origin});
+    if(cached) return cached;
+    const response = await fetch(request);
+    if(response.ok) await cache.put(request,response.clone());
+    return response;
+  })());
 });
-
-
-
-
-
-
-

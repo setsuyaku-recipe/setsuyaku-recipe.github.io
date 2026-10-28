@@ -1952,7 +1952,7 @@ function applyRemoteData(data, isSilent = false) {
       changed = true;
     }
 
-    if (data.childrenPreferences) {
+    if (data.childrenPreferences && JSON.stringify(data.childrenPreferences) !== JSON.stringify(state.childrenPreferences)) {
       state.childrenPreferences = data.childrenPreferences;
       localStorage.setItem(STORAGE_KEY_CHILDREN_PREF, JSON.stringify(state.childrenPreferences));
       changed = true;
@@ -1997,8 +1997,13 @@ function applyRemoteData(data, isSilent = false) {
 }
 
 // 更新方式（C案）: 画面表示時・ブラウザ復帰時・手動更新（ポーリング完全廃止）
+let syncRefreshInFlight = false;
+let lastSilentRefreshAt = 0;
 async function fetchAndApplySync(isSilent = false) {
-  if (!state.familySyncCode) return;
+  if (!state.familySyncCode || syncRefreshInFlight) return;
+  if (isSilent && Date.now()-lastSilentRefreshAt < 5000) return;
+  syncRefreshInFlight = true;
+  if(isSilent) lastSilentRefreshAt = Date.now();
   try {
     if (!isSilent) updateSyncStatusUI('syncing');
     const remoteData = await fetchSyncData(state.familySyncCode);
@@ -2011,7 +2016,7 @@ async function fetchAndApplySync(isSilent = false) {
   } catch (err) {
     console.warn('Sync refresh error:', err);
     updateSyncStatusUI(state.familySyncCode ? 'connected' : 'disconnected');
-  }
+  } finally { syncRefreshInFlight = false; }
 }
 
 // 手動「最新に更新」ボタン押下時
@@ -5079,3 +5084,4 @@ function setupUniversalNavigation() {
 
 // Recheck the day when a home-screen app returns after midnight.
  document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});
+

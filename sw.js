@@ -1,11 +1,11 @@
 // Service Worker for 週ぎめごはん (PWA)
 // 更新時に旧画面が残らないことを最優先したキャッシュ戦略
-const CACHE_VERSION = '20261028_gohan_character';
+const CACHE_VERSION = '20261028_gohan_complete';
 const CACHE_PREFIX = 'setsuyaku-recipe-';
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
-  './assets/gohan-kun.png',
+  './assets/gohan-kun-complete.png',
   './',
   './index.html',
   './recipes.js',

@@ -948,7 +948,7 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
     <button type="button" class="home-meal-hero" onclick="openTodayMealScreen()">
       <span id="home-meal-action" class="home-meal-action">献立を見る <span aria-hidden="true">›</span></span>
       <span class="home-meal-content"><span id="home-meal-label" class="home-meal-label">今日の主菜</span><span id="home-meal-title" class="home-meal-title"></span><span id="home-meal-day" class="home-meal-day"></span></span>
-      <img class="home-rice-character" src="assets/gohan-kun.png" width="1280" height="1280" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+      <img class="home-rice-character" src="assets/gohan-kun-complete.png" width="1280" height="1280" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
     </button>
     <nav class="home-secondary" aria-label="家族と買い物のメニュー">
       <button type="button" onclick="goToAppTab('shopping')"><svg viewBox="0 0 80 80" aria-hidden="true"><g stroke="#173852" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 36q-8-26 7-26 12 3 9 26m7 0q-1-23 15-22 13 11-2 22" fill="#92c850"/><circle cx="57" cy="33" r="11" fill="#ed896b"/><path d="m13 35 7 32h42l7-32Z" fill="#f5a18c"/><path d="M10 34h62M29 45v11m12-11v11m12-11v11" fill="none"/></g></svg><span>買い物</span><span class="home-nav-chevron" aria-hidden="true">›</span></button>
@@ -1764,14 +1764,14 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_gohan_character"></script>
-  <script src="app.js?v=20261028_gohan_character"></script>
+  <script src="recipes.js?v=20261028_gohan_complete"></script>
+  <script src="app.js?v=20261028_gohan_complete"></script>
 
   <!-- PWA Service Worker 登録 ＆ 自動アップデート検知 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_gohan_character', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=20261028_gohan_complete', { updateViaCache: 'none' })
           .then((reg) => {
             // 起動時にサーバーへ即座に更新チェック
             reg.update();

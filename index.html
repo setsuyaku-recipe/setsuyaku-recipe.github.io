@@ -992,6 +992,7 @@ body .meal-card .meal-title-prefix{ text-wrap:balance }
 body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
 @media(max-width:420px){body .weekly-dish-main .meal-title{font-size:21px}body .weekly-dish-side .meal-title,body .weekly-dish-soup .meal-title{font-size:19px}}
 
+.meal-preference-warning{font-size:13px;line-height:1.6;color:#763e15;background:#fff3d7;border:1px solid #dfc18e;border-radius:6px;padding:8px;margin:0 0 10px;font-weight:500}.preference-conflict-notice{order:0;width:100%;box-sizing:border-box;font-size:14px;line-height:1.7;padding:12px;border:1px solid #dfc18e;border-radius:10px;background:#fff6df;color:#6c421a;margin:0 0 12px}
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1141,7 +1142,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
           
         </div>
 
-        <button id="btn-regenerate-weekly" onclick="generateRandomWeeklyPlan(true)" class="weekly-primary-btn">
+        <button id="btn-regenerate-weekly" class="weekly-primary-btn">
           <i data-lucide="sparkles" class="w-4 h-4"></i>
           <span>1週間を作り直す</span>
         </button>
@@ -1155,6 +1156,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
       </div>
 
       <button type="button" class="ud-recipe-link" onclick="goToAppTab('recipes')">レシピを探す ›</button>
+      <p id="preference-conflict-notice" class="preference-conflict-notice" role="status" hidden></p>
       <!-- 献立カードコンテナ（JSで1日カード or 7日グリッドを動的レンダリング） -->
       <div id="weekly-plan-container">
         <!-- JSで動的レンダリング -->
@@ -1816,8 +1818,8 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_gentle_word"></script>
-  <script src="app.js?v=20261028_gentle_word"></script>
+  <script src="recipes.js?v=20261029_preference_safety"></script>
+  <script src="app.js?v=20261029_preference_safety"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1827,7 +1829,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_gentle_word', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_preference_safety', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;
@@ -1851,6 +1853,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
 </body>
 
 </html>
+
 
 
 

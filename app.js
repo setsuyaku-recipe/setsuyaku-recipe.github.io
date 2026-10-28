@@ -457,39 +457,33 @@ function updateNgBadge() {
 }
 
 // 苦手食材を含まないレシピをフィルタリング
-function filterRecipesByDislikes(recipes) {
-  if (!Array.isArray(recipes)) return [];
-  // お子様が0人の場合は大人・夫婦のみモードのため苦手除外をスキップ
-  if (state.childrenCount === 0) return recipes;
-
-  const activeChildKeys = [];
-  for (let i = 1; i <= state.childrenCount; i++) {
-    activeChildKeys.push(`child${i}`);
+function getRecipePreferenceConflicts(recipe) {
+  if (!recipe) return [];
+  const children = [];
+  for (let i=1;i<=state.childrenCount;i++) {
+    const pref=state.childrenPreferences['child'+i] || {dislikes:[],disabledFlavors:[]};
+    if (!canChildEat(recipe,pref)) children.push(i);
   }
-
-  const filtered = recipes.filter(recipe => {
-    if (!recipe) return false;
-    // 設定されている人数分のお子様が食べられるかチェック
-    const allChildrenCanEat = activeChildKeys.every(k => {
-      const pref = state.childrenPreferences[k] || { dislikes: [], disabledFlavors: [] };
-      if (canChildEat(recipe, pref)) return true;
-      
-      // 代替メニューがあるかチェック
-      if (recipe.baseIngredientsGroup) {
-        const alt = RECIPES_DATA.find(r => 
-          r &&
-          r.baseIngredientsGroup === recipe.baseIngredientsGroup && 
-          r.id !== recipe.id &&
-          canChildEat(r, pref)
-        );
-        if (alt) return true;
-      }
-      return false;
-    });
-    return allChildrenCanEat;
-  });
-
-  return filtered.length > 0 ? filtered : recipes;
+  return children;
+}
+function filterRecipesByDislikes(recipes) {
+  return Array.isArray(recipes) ? recipes.filter(r=>r && getRecipePreferenceConflicts(r).length===0) : [];
+}
+function getPlanPreferenceConflicts() {
+  if(!state.weeklyPlan) return [];
+  const conflicts=[];
+  for(const day of DAYS_OF_WEEK) for(const category of ['main','side','soup']) {
+    const recipe=getRecipeById(state.weeklyPlan[day.id]?.[category]);
+    const children=getRecipePreferenceConflicts(recipe);
+    if(children.length) conflicts.push({dayId:day.id,category,children});
+  }
+  return conflicts;
+}
+function updatePreferenceConflictNotice() {
+  const el=document.getElementById('preference-conflict-notice');
+  if(!el)return;
+  const conflicts=getPlanPreferenceConflicts();el.hidden=!conflicts.length;
+  el.textContent=conflicts.length ? `苦手食材の設定に合わない料理が${conflicts.length}品あります。献立は変更していません。注意が付いた料理の「この１品を変更」で入れ替えられます。` : '';
 }
 
 function canChildEat(recipe, childPref) {
@@ -549,15 +543,20 @@ function calculatePlanTotalCost(plan, filterDays = null) {
 
 // 予算マッチング＆30日重複なし＆お気に入り定期登板 献立生成エンジン
 function generateRandomWeeklyPlan(showNotify = true) {
-  // 0. 今週の調理済みステータスをリセット
-  state.cookedDays = [];
-  saveCookedDays();
+
 
   // 1. 除外（NG）レシピの排除 ＆ 苦手食材フィルタ
   const isNotBlacklisted = r => !state.blacklistedRecipeIds.includes(r.id);
   let availableMains = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'main' && isNotBlacklisted(r)));
   let availableSides = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'side' && isNotBlacklisted(r)));
   let availableSoups = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'soup' && isNotBlacklisted(r)));
+  const missing=[['主菜',availableMains],['副菜',availableSides],['汁物',availableSoups]].filter(x=>!x[1].length).map(x=>x[0]);
+  if(missing.length) {
+    showToast(`苦手食材の条件に合う${missing.join('・')}がありません。献立は変更していません。設定をご確認ください。`);
+    return false;
+  }
+  state.cookedDays = [];
+  saveCookedDays();
 
   // 2. 季節フィルター（指定がある場合、該当季節または通年のものを優先）
   if (state.selectedSeason && state.selectedSeason !== 'all') {
@@ -734,6 +733,7 @@ function generateRandomWeeklyPlan(showNotify = true) {
   if (state.familySyncCode && !state.isJoiningFromUrl) {
     pushSyncDataDebounced();
   }
+  return true;
 }
 
 function savePlan() {
@@ -2724,7 +2724,7 @@ function renderWeeklyPlan() {
     const cardHtmlList = cardDays.map((day, idx) => {
       let dayData = state.weeklyPlan[day.id];
       if (!dayData) {
-        dayData = { main: 'main_01', side: 'side_01', soup: 'soup_01' };
+        dayData = { main: null, side: null, soup: null };
         state.weeklyPlan[day.id] = dayData;
       }
 
@@ -2733,16 +2733,16 @@ function renderWeeklyPlan() {
       let soupRecipe = getRecipeById(dayData.soup);
 
       if (!mainRecipe && Array.isArray(RECIPES_DATA) && RECIPES_DATA.length > 0) {
-        mainRecipe = RECIPES_DATA.find(r => r && r.category === 'main') || RECIPES_DATA[0];
-        dayData.main = mainRecipe.id;
+        mainRecipe = filterRecipesByDislikes(RECIPES_DATA.filter(r => r && r.category === 'main' && !state.blacklistedRecipeIds.includes(r.id)))[0];
+        dayData.main = mainRecipe ? mainRecipe.id : null;
       }
       if (!sideRecipe && Array.isArray(RECIPES_DATA) && RECIPES_DATA.length > 0) {
-        sideRecipe = RECIPES_DATA.find(r => r && r.category === 'side') || RECIPES_DATA[1];
-        dayData.side = sideRecipe.id;
+        sideRecipe = filterRecipesByDislikes(RECIPES_DATA.filter(r => r && r.category === 'side' && !state.blacklistedRecipeIds.includes(r.id)))[0];
+        dayData.side = sideRecipe ? sideRecipe.id : null;
       }
       if (!soupRecipe && Array.isArray(RECIPES_DATA) && RECIPES_DATA.length > 0) {
-        soupRecipe = RECIPES_DATA.find(r => r && r.category === 'soup') || RECIPES_DATA[2];
-        dayData.soup = soupRecipe.id;
+        soupRecipe = filterRecipesByDislikes(RECIPES_DATA.filter(r => r && r.category === 'soup' && !state.blacklistedRecipeIds.includes(r.id)))[0];
+        dayData.soup = soupRecipe ? soupRecipe.id : null;
       }
 
       const isCooked = state.cookedDays.includes(day.id);
@@ -2867,6 +2867,7 @@ function renderWeeklyPlan() {
     generateRandomWeeklyPlan(false);
   }
 
+  updatePreferenceConflictNotice();
   renderMealSwapStatus();
   safeCreateIcons();
 }
@@ -2910,7 +2911,7 @@ function renderMealTitle(text) {
 }
 
 function renderDishRow(dayId, category, recipe, label) {
-  if (!recipe) return '';
+  if (!recipe) return `<div class="meal-preference-warning">${label}は条件に合う料理が見つかりません。苦手食材の設定をご確認ください。</div>`;
 
   const cleanTitle = getCleanTitle(recipe);
   const cuisineBadge = recipe.cuisine ? `<span class="text-[10px] text-slate-600 bg-white border border-slate-200 px-1.5 py-0.2 rounded-md font-bold shrink-0">${CUISINE_LABELS[recipe.cuisine] || ''}</span>` : '';
@@ -2958,6 +2959,8 @@ function renderDishRow(dayId, category, recipe, label) {
     `).join('');
   }
 
+  const conflictChildren=getRecipePreferenceConflicts(recipe);
+  const conflictHtml=conflictChildren.length ? `<p class="meal-preference-warning" role="note">子ども${conflictChildren.join('・')}の苦手食材の設定に合いません。変更を確認してください。</p>` : '';
   const reading = getMealReadingName(recipe);
   const known = {
     '鶏ひき肉と豆腐のふんわり照り焼きつくね': ['鶏ひき肉と豆腐の', '照り焼きつくね', '甘辛だれの、やわらかつくね'],
@@ -2966,7 +2969,7 @@ function renderDishRow(dayId, category, recipe, label) {
   const parts = known[cleanTitle] || ['', reading.rawTitle, ''];
   return `<article class="weekly-dish weekly-dish-${category} meal-card" aria-label="${label}">
     <div class="meal-card-band"><span aria-hidden="true">${category === 'main' ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3v6q0 3 3 3t3-3V3M7 3v18M19 3q-5 4-4 10h4V3v18"/></svg>' : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18q0 11-9 11T3 7ZM8 18v3h8v-3"/></svg>'}</span><span>${label}</span><span class="meal-band-rule"></span></div>
-    <div class="meal-card-body"><h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}')">${renderMealTitle(parts[1])}</button></h3>
+    <div class="meal-card-body">${conflictHtml}<h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}')">${renderMealTitle(parts[1])}</button></h3>
     ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}</div>
     <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}')">作り方 <span aria-hidden="true">›</span></button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更"><span aria-hidden="true">⇄</span> この１品を変更</button></div>
 
@@ -3024,6 +3027,7 @@ window.swapSingleDish = function(dayId, category) {
 window.undoSingleDish = function() {
   const u = mealSwapUndo;
   if (!u || state.weeklyPlan?.[u.dayId]?.[u.category] !== u.next) { mealSwapUndo=null;renderMealSwapStatus();return; }
+  if(getRecipePreferenceConflicts(getRecipeById(u.old)).length){showToast('元の料理は現在の苦手食材の設定に合わないため戻せません');return;}
   state.weeklyPlan[u.dayId][u.category] = u.old;
   mealSwapUndo = null;
   commitMealSwap(u.dayId);
@@ -3037,6 +3041,7 @@ window.shuffleDayMenu = function(dayId) {
   const sides = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'side' && isNotBlacklisted(r)));
   const soups = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === 'soup' && isNotBlacklisted(r)));
 
+  if(!state.weeklyPlan?.[dayId] || !mains.length || !sides.length || !soups.length){showToast('条件に合う料理が足りないため、この日の献立は変更していません');return;}
   state.weeklyPlan[dayId] = {
     main: mains.length > 0 ? mains[Math.floor(Math.random() * mains.length)].id : 'main_01',
     side: sides.length > 0 ? sides[Math.floor(Math.random() * sides.length)].id : 'side_01',
@@ -4508,9 +4513,15 @@ window.savePreferencesAndGenerate = function() {
   saveOnboarding();
   updateCoreFlowSummary();
   state.hasCompletedOnboarding = true;
+  preferenceDraftBackup=null;
   closePreferencesModal();
-  if (state.weeklyPlan) generateRandomWeeklyPlan(true);
-  else showToast('苦手食材を保存しました');
+  const conflicts=getPlanPreferenceConflicts();
+  state.renderedTabs.weekly=false;state.renderedTabs.recipes=false;
+  if(conflicts.length){
+    state.activeSwipeDayIndex=DAYS_OF_WEEK.findIndex(d=>d.id===conflicts[0].dayId);
+    setAppScreen('weekly');
+    showToast('設定を保存しました。変更が必要な料理をご確認ください');
+  }else showToast('苦手食材を保存しました。献立はそのままです');
 
   if (state.familySyncCode) {
     pushSyncDataDebounced();
@@ -4707,7 +4718,7 @@ function renderChangeRecipeList() {
   if (!listContainer || !state.changeTarget) return;
 
   const { dayId, category } = state.changeTarget;
-  let recipes = RECIPES_DATA.filter(r => r.category === category && !state.blacklistedRecipeIds.includes(r.id));
+  let recipes = filterRecipesByDislikes(RECIPES_DATA.filter(r => r.category === category && !state.blacklistedRecipeIds.includes(r.id)));
   const currentId = state.weeklyPlan[dayId][category];
 
   // 簡易カテゴリフィルタ（第14条: おまかせ / 肉系 / 魚系 / その他）
@@ -4722,7 +4733,7 @@ function renderChangeRecipeList() {
   if (recipes.length === 0) {
     listContainer.innerHTML = `
       <div class="text-center py-8 text-slate-400 text-xs">
-        該当するレシピがありません。「おまかせ」をお試しください。
+        苦手食材と現在の条件に合う料理がありません。条件をご確認ください。
       </div>
     `;
     return;
@@ -4791,6 +4802,9 @@ window.selectAlternativeRecipe = function(newRecipeId) {
   if (!state.changeTarget) return;
 
   const { dayId, category } = state.changeTarget;
+  const candidate=getRecipeById(newRecipeId);
+  if(!candidate || candidate.category!==category || state.blacklistedRecipeIds.includes(newRecipeId) || getRecipePreferenceConflicts(candidate).length){showToast('現在の苦手食材の条件に合わないため変更できません');return;}
+  if(!state.weeklyPlan?.[dayId])return;
   state.weeklyPlan[dayId][category] = newRecipeId;
 
   savePlan();
@@ -5054,6 +5068,7 @@ function syncAppScreen() {
   document.querySelector('main').hidden = ['home','dislikes','sharing'].includes(screen);
 }
 function setAppScreen(screen, push = true) {
+  if(state.activeTab==='dislikes' && screen!=='dislikes') discardPreferenceDraft();
   if (!['home','weekly','shopping','recipes','setup','dislikes','sharing','settings'].includes(screen)) screen = 'home';
   const changed = state.activeTab !== screen;
   state.activeTab = screen;
@@ -5101,12 +5116,23 @@ window.saveMealSetup = function() {
   if (!Number.isFinite(setupDraft.budget) || setupDraft.budget < 3000 || setupDraft.budget > 30000 || setupDraft.budget % 100 !== 0) {
     document.getElementById('ud-setup-error').textContent='予算は3,000〜30,000円の間で、100円単位で入力してください。';return;
   }
+  const previous={servings:state.servings,budget:state.targetBudget};
   state.servings=setupDraft.servings;state.targetBudget=setupDraft.budget;
-  saveServings();saveBudget();localStorage.setItem(UD_SETUP_KEY,'true');
-  generateRandomWeeklyPlan(false);setAppScreen('weekly');
+  if(generateRandomWeeklyPlan(false)===false){
+    state.servings=previous.servings;state.targetBudget=previous.budget;
+    document.getElementById('ud-setup-error').textContent='苦手食材の条件に合う料理が足りません。条件を確認してください。';return;
+  }
+  saveServings();saveBudget();localStorage.setItem(UD_SETUP_KEY,'true');setAppScreen('weekly');
 };
+let preferenceDraftBackup=null;
+function discardPreferenceDraft(){
+  if(!preferenceDraftBackup)return;
+  state.childrenPreferences=preferenceDraftBackup.preferences;
+  state.childrenCount=preferenceDraftBackup.count;
+  preferenceDraftBackup=null;
+}
 const originalOpenPreferences = window.openPreferencesModal;
-window.openPreferencesModal = function(onboarding=false) {setAppScreen('dislikes');originalOpenPreferences(onboarding);};
+window.openPreferencesModal = function(onboarding=false) {if(!preferenceDraftBackup)preferenceDraftBackup={preferences:JSON.parse(JSON.stringify(state.childrenPreferences)),count:state.childrenCount};setAppScreen('dislikes');originalOpenPreferences(onboarding);};
 const originalClosePreferences = window.closePreferencesModal;
 window.closePreferencesModal = function() {originalClosePreferences();if(state.activeTab==='dislikes')returnAppHome();};
 const originalOpenSync = window.openSyncModal;
@@ -5135,5 +5161,6 @@ function setupUniversalNavigation() {
 
 // Recheck the day when a home-screen app returns after midnight.
  document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});
+
 
 

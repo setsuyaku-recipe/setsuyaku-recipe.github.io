@@ -2763,10 +2763,10 @@ function renderWeeklyPlan() {
       ` : '';
 
       return `
-        <div id="swipe-card-${day.id}" class="rounded-2xl border transition-all overflow-hidden bg-white shadow-2xs flex flex-col ${
+        <div id="swipe-card-${day.id}" role="group" aria-labelledby="meal-day-heading-${day.id}" class="${isSwipeMode ? '' : 'weekly-overview-day'} rounded-2xl border transition-all overflow-hidden bg-white shadow-2xs flex flex-col ${
           isCooked ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-sky-100/90 hover:border-sky-200'
         } ${isSwipeMode ? 'shrink-0 w-full max-w-md mx-auto' : ''}">
-          <div class="reading-day-header"><h2>${day.name.replace(/^[^月火水木金土日]*([月火水木金土日]曜日).*$/, '$1')}</h2>
+          <div class="reading-day-header"><h2 id="meal-day-heading-${day.id}">${day.name.replace(/^[^月火水木金土日]*([月火水木金土日]曜日).*$/, '$1')}</h2>
             <span class="meal-day-cost">${state.servings}人分 約${(dayCost * state.servings).toLocaleString()}円</span><details class="reading-day-options"><summary>この日の設定</summary><div>
               <span>${state.servings}人分 約¥${dayCost * state.servings}</span>
               <label><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShoppingDay('${day.id}')">買い物リストに入れる</label>
@@ -2841,7 +2841,7 @@ function renderWeeklyPlan() {
     } else {
       // 7日分全表示モード（グリッドレイアウト）
       container.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="weekly-overview grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           ${cardHtmlList.join('')}
         </div>
       `;

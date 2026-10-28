@@ -934,6 +934,21 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
 @media(prefers-reduced-motion:reduce){.home-meal-hero,.home-secondary button{transition:none}.home-meal-hero:active,.home-secondary button:active{transform:none}}
 
 .home-rice-character{object-fit:contain;aspect-ratio:1;width:41%;height:auto;max-width:190px;filter:drop-shadow(0 5px 2px #003c3020)}
+
+/* Week overview: a clear outer group for each day's three dishes. */
+body #weekly-plan-container .weekly-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:28px;align-items:start;padding:5px 2px 16px}
+body #weekly-plan-container .weekly-overview .weekly-overview-day{border:2px solid #b8c8b8!important;background:#f3f5ec!important;border-radius:18px!important;padding:12px!important;box-shadow:0 4px 0 #e1e6d9!important;min-width:0;overflow:visible}
+body #weekly-plan-container .weekly-overview .reading-day-header{background:#2c654f;color:#fff;margin:-12px -12px 12px;padding:12px 14px 8px;border-radius:15px 15px 0 0;border:0;gap:6px 12px}
+.weekly-overview .reading-day-header h2{font-size:24px;font-weight:750;line-height:1.4;color:#fff}
+.weekly-overview .meal-day-cost{color:#fff;font-size:13px}
+.weekly-overview .reading-day-options{flex-basis:100%;margin-left:0;color:#fff}
+.weekly-overview .reading-day-options>summary{min-height:32px;padding:5px 0;text-align:right;color:#fff;font-size:12px}
+.weekly-overview .reading-day-options>div{color:#293f31;text-align:left}
+body #weekly-plan-container .weekly-overview .weekly-dish:last-child{margin-bottom:0}
+.weekly-overview .reading-day-header:focus-within{outline:2px solid #e7ba49;outline-offset:2px}
+@media(max-width:360px){body #weekly-plan-container .weekly-overview .weekly-overview-day{padding:8px!important}.weekly-overview .reading-day-header h2{font-size:22px}body #weekly-plan-container .weekly-overview .reading-day-header{margin:-8px -8px 10px;padding:10px 12px 6px}}
+@media print{body #weekly-plan-container .weekly-overview .weekly-overview-day{break-inside:avoid;box-shadow:none!important}}
+
   </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1764,8 +1779,8 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261028_performance"></script>
-  <script src="app.js?v=20261028_performance"></script>
+  <script src="recipes.js?v=20261028_week_boundaries"></script>
+  <script src="app.js?v=20261028_week_boundaries"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1775,7 +1790,7 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261028_performance', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261028_week_boundaries', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

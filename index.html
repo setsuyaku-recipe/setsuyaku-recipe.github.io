@@ -921,7 +921,7 @@ body .ud-home.home-b{max-width:480px;min-height:100svh;margin:auto;padding:24px 
 .home-meal-content{display:flex;flex-direction:column;align-items:flex-start;width:62%;position:relative;z-index:2;min-width:0}
 .home-meal-label{font-size:12px;line-height:1.4;font-weight:700;color:#164636;background:#ffd343;border-radius:20px;padding:4px 11px;margin-bottom:9px}
 .home-meal-title{font-size:17px;line-height:1.55;font-weight:650;overflow-wrap:anywhere;word-break:normal;text-wrap:pretty}
-.home-meal-day{font-size:13px;line-height:1.5;margin-top:10px;font-weight:550}
+.home-meal-day{font-size:13px;line-height:1.5;margin-top:10px;font-weight:550;word-break:keep-all;overflow-wrap:normal}
 .home-rice-character{position:absolute;right:8px;bottom:14px;width:41%;height:auto;z-index:1;pointer-events:none}
 .home-secondary{display:grid;gap:11px;margin-top:16px}
 .home-secondary button{display:flex;align-items:center;gap:16px;width:100%;min-width:0;min-height:70px;padding:6px 16px;box-sizing:border-box;background:#fff;border:1px solid #ede8dc;border-radius:15px;box-shadow:0 3px 0 #e9e5d9;color:#184c3c;text-align:left;transition:transform .12s,box-shadow .12s}
@@ -976,7 +976,7 @@ body .weekly-display-switch button[aria-pressed="true"]{background:transparent!i
 #panel-shopping .shopping-actions label>span:last-child{max-width:none;text-align:left;white-space:nowrap;flex-shrink:0}
 #modal-preferences :has(>label[for="modal-children-count-select"]){background:#f2f5ec!important;border-color:#cedac6!important}#modal-preferences label[for="modal-children-count-select"],#modal-children-count-select{color:#285c47!important}#modal-children-count-select{background:#f9fbf5!important;border-color:#b8cbb0!important}
 .sharing-home-back{display:flex;align-items:center;gap:8px;align-self:flex-start;min-height:44px;margin-bottom:8px;background:none;color:#285c47;font-size:15px;font-weight:600}
-.home-meal-title,.ud-guide-steps strong,.ud-guide-steps p{word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}.home-title-phrase{white-space:nowrap}.ud-guide-steps{list-style:decimal;padding-left:24px;display:grid;gap:16px}.ud-guide-steps p{font-size:15px;line-height:1.7;margin-top:4px}
+.home-meal-title,.ud-guide-steps strong,.ud-guide-steps p{word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}.home-title-phrase{display:inline-block;max-width:100%;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}.ud-guide-steps{list-style:decimal;padding-left:24px;display:grid;gap:16px}.ud-guide-steps p{font-size:15px;line-height:1.7;margin-top:4px}
 #ud-page-title,.reading-day-header h2{font-family:"Zen Maru Gothic",ui-rounded,sans-serif}
 
 
@@ -1824,9 +1824,9 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_child_alternatives"></script>
-  <script src="week-management.js?v=20261029_child_alternatives"></script>
-  <script src="app.js?v=20261029_child_alternatives"></script>
+  <script src="recipes.js?v=20261029_home_word_wrap"></script>
+  <script src="week-management.js?v=20261029_home_word_wrap"></script>
+  <script src="app.js?v=20261029_home_word_wrap"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1836,7 +1836,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_child_alternatives', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_home_word_wrap', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

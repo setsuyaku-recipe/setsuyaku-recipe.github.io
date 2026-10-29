@@ -1100,6 +1100,50 @@ body[data-screen="weekly"] .weekly-overview .reading-day-header{margin:0 0 10px!
 body[data-screen="weekly"] .weekly-overview .reading-day-options,body[data-screen="weekly"] .weekly-overview .meal-day-cost{color:var(--meal-muted)!important}
 body[data-screen="weekly"] :is(.meal-card-actions button,.meal-week-disclosure summary,.reading-day-options summary):focus-visible{outline:3px solid var(--meal-green);outline-offset:3px}
 @media(max-width:360px){body[data-screen="weekly"] .ud-title-row #ud-page-title{font-size:19px!important}body[data-screen="weekly"] .ud-title-row{gap:6px}}
+
+/* Reading-first meal cards: calm surfaces, clear category, explicit actions. */
+body[data-screen="weekly"]{font-family:'Noto Sans JP',sans-serif}
+body[data-screen="weekly"] :is(#ud-page-title,.reading-day-header h2){font-family:inherit!important}
+body[data-screen="weekly"] .ud-title-row #ud-page-title{font-weight:750!important}
+body[data-screen="weekly"] .weekly-dish.meal-card{
+  display:block;clip-path:none!important;background:#fff!important;border:1px solid #d8dfd5!important;
+  border-radius:14px!important;padding:0!important;margin:0 0 14px!important;overflow:hidden;box-shadow:none!important
+}
+body[data-screen="weekly"] .meal-card::before,body[data-screen="weekly"] .meal-card::after{display:none!important}
+body[data-screen="weekly"] .meal-card-band{
+  background:#f0f4ed!important;color:#326f56!important;border-bottom:1px solid #e2e7de;
+  min-height:36px;padding:8px 16px!important;gap:8px;font-size:14px;font-weight:700;letter-spacing:0
+}
+body[data-screen="weekly"] .meal-card-band>span:first-child{display:flex;align-items:center}
+body[data-screen="weekly"] .meal-card-band svg{width:18px;height:18px}
+body[data-screen="weekly"] .meal-band-rule{display:none}
+body[data-screen="weekly"] .meal-card-body{background:#fff!important;padding:16px!important}
+body[data-screen="weekly"] .meal-card-body h3{margin:0!important}
+body[data-screen="weekly"] .meal-card .meal-title{
+  color:#26352b!important;font-family:inherit!important;line-height:1.6!important;
+  text-align:left!important;font-weight:700!important;letter-spacing:.01em;text-wrap:pretty!important
+}
+body[data-screen="weekly"] .weekly-dish-main .meal-title{font-size:23px!important}
+body[data-screen="weekly"] :is(.weekly-dish-side,.weekly-dish-soup) .meal-title{font-size:20px!important}
+body[data-screen="weekly"] .meal-title-prefix{font-size:15px!important;color:#596354!important;margin:0 0 4px!important;font-weight:500!important}
+body[data-screen="weekly"] .meal-description{color:#697264;font-size:13px;line-height:1.6}
+body[data-screen="weekly"] .meal-card-actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fff!important;
+  padding:0 16px 14px!important;border:0!important
+}
+body[data-screen="weekly"] .meal-card-actions button{
+  min-height:46px!important;padding:8px 6px!important;border:1px solid #bdcebf!important;
+  border-radius:10px!important;background:#edf4ed!important;color:#285c47!important;
+  font-family:inherit;font-size:14px!important;font-weight:650!important;gap:6px!important
+}
+body[data-screen="weekly"] .meal-card-actions button+button{background:#fff!important;color:#4f5e50!important;border-color:#d9dfd3!important}
+body[data-screen="weekly"] .meal-card-actions button+button span{font-size:19px!important}
+body[data-screen="weekly"] .meal-card .truncate{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.6;font-size:13px!important}
+body[data-screen="weekly"] .meal-preference-warning{font-size:13px;line-height:1.6}
+body[data-screen="weekly"] .meal-card .border-l-2{margin-top:12px!important;padding:8px 10px!important;border-radius:8px}
+body[data-screen="weekly"] .meal-card .border-l-2 .flex{flex-wrap:wrap;gap:4px}
+body[data-screen="weekly"] .weekly-overview .weekly-dish.meal-card{border-radius:12px!important}
+@media(max-width:360px){body[data-screen="weekly"] .meal-card-body{padding:14px!important}body[data-screen="weekly"] .meal-card-actions{padding:0 12px 12px!important}body[data-screen="weekly"] .meal-card-actions button{font-size:13px!important}}
 </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1926,9 +1970,9 @@ body[data-screen="weekly"] :is(.meal-card-actions button,.meal-week-disclosure s
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_meal_unified"></script>
-  <script src="week-management.js?v=20261029_meal_unified"></script>
-  <script src="app.js?v=20261029_meal_unified"></script>
+  <script src="recipes.js?v=20261029_meal_readability"></script>
+  <script src="week-management.js?v=20261029_meal_readability"></script>
+  <script src="app.js?v=20261029_meal_readability"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1938,7 +1982,7 @@ body[data-screen="weekly"] :is(.meal-card-actions button,.meal-week-disclosure s
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_meal_unified', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_meal_readability', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

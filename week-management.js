@@ -98,7 +98,7 @@ function renderCalendarWeekControls() {
     const disclosure=document.createElement('details');disclosure.className='meal-week-disclosure';
     const summary=document.createElement('summary');
     const first=new Date(activeWeekStart+'T12:00:00');const last=new Date(first);last.setDate(last.getDate()+6);
-    summary.textContent=first.getMonth()+1+'/'+first.getDate()+'〜'+(last.getMonth()+1)+'/'+last.getDate()+'　週を変更';
+    summary.innerHTML='<strong>'+calendarWeekLabel()+' '+(first.getMonth()+1)+'/'+first.getDate()+'〜'+(last.getMonth()+1)+'/'+last.getDate()+'</strong><span>週を変更 ⌄</span>';
     disclosure.appendChild(summary);host.appendChild(disclosure);
     const row=document.createElement('div'); row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:8px';
     for (const [label,key] of [['今週',mondayKey()],['来週',shiftWeek(mondayKey(),1)]]) {

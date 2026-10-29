@@ -2844,8 +2844,8 @@ function renderWeeklyPlan() {
         <div id="swipe-card-${day.id}" role="group" aria-labelledby="meal-day-heading-${day.id}" class="${isSwipeMode ? '' : 'weekly-overview-day'} rounded-2xl border transition-all overflow-hidden bg-white shadow-2xs flex flex-col ${
           isCooked ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-sky-100/90 hover:border-sky-200'
         } ${isSwipeMode ? 'shrink-0 w-full max-w-md mx-auto' : ''}">
-          <div class="reading-day-header"><h2 id="meal-day-heading-${day.id}">${day.name.replace(/^[^月火水木金土日]*([月火水木金土日]曜日).*$/, '$1')}</h2>
-            <span class="meal-day-cost">${state.servings}人分 約${(dayCost).toLocaleString()}円</span><details class="reading-day-options"><summary>この日の設定</summary><div>
+          <div class="reading-day-header"><h2 id="meal-day-heading-${day.id}">${mealDateLabel(DAYS_OF_WEEK.findIndex(d=>d.id===day.id))}</h2>
+            <span class="meal-day-cost">${state.servings}人分 約${(dayCost).toLocaleString()}円</span><details class="reading-day-options"><summary aria-label="この日の設定">⋯</summary><div>
               <span>${state.servings}人分 約¥${dayCost}</span>
               <label><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShoppingDay('${day.id}')">買い物リストに入れる</label>
               <button type="button" onclick="toggleCookedDay('${day.id}')">${isCooked ? '調理済みを解除' : '作ったことを記録'}</button>
@@ -2878,7 +2878,7 @@ function renderWeeklyPlan() {
                       ? 'bg-slate-900 text-white font-black shadow-xs ring-2 ring-slate-900 ring-offset-1'
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
                   }">
-            <span class="text-[11px] sm:text-xs font-black leading-none">${d.label}</span>
+            <span class="reference-tab-date">${mealDateForIndex(idx).getDate()}</span><span class="reference-tab-weekday">${d.label}</span>
             <span class="meal-weekday-caption">曜日</span><span class="meal-day-check" aria-hidden="true">${isAct ? "✓" : ""}</span>
           </button>
         `;
@@ -3005,17 +3005,7 @@ function renderDishRow(dayId, category, recipe, label) {
   const resolution=getChildMenuResolution(recipe);
   const altMenus=resolution.alternatives;
 
-  let altHtml = '';
-  if (altMenus.length > 0) {
-    altHtml = altMenus.map(m => `
-      <div class="mt-1.5 pl-2 border-l-2 border-amber-400 flex items-center justify-between bg-amber-50/90 rounded-r-lg p-1.5 min-w-0">
-        <div class="flex items-center gap-1.5 min-w-0 flex-1">
-          <span class="text-[10px] font-black text-amber-900 bg-amber-200/90 px-1.5 py-0.2 rounded shrink-0">別メニュー (${m.label}・1人分)</span>
-          <span class="text-xs font-bold text-amber-950 cursor-pointer hover:underline truncate" onclick="openDetailModal('${m.alt.id}',${recipePortionsForMeal(m.alt,recipe)})">${getCleanTitle(m.alt)}</span>
-        </div>
-      </div>
-    `).join('');
-  }
+  const altHtml=altMenus.map(m=>`<details class="reference-alternative"><summary>${escapeUiText(m.label)}：${escapeUiText(getCleanTitle(m.alt))}</summary><div><p>元の料理 ${recipePortionsForMeal(recipe,recipe)}人分＋別メニュー ${altMenus.length}人分（材料・費用に反映済み）</p><button type="button" onclick="openDetailModal('${m.alt.id}',${recipePortionsForMeal(m.alt,recipe)})">別メニューの作り方</button></div></details>`).join('');
 
   const conflictChildren=resolution.unresolved;
   const conflictHtml=conflictChildren.length ? `<p class="meal-preference-warning" role="note">子ども${conflictChildren.join('・')}の苦手食材に合う別メニューが見つかりません。「この１品を変更」でご確認ください。</p>` : '';
@@ -3028,8 +3018,8 @@ function renderDishRow(dayId, category, recipe, label) {
   return `<article class="weekly-dish weekly-dish-${category} meal-card" aria-label="${label}">
     <div class="meal-card-band"><span aria-hidden="true">${category === 'main' ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3v6q0 3 3 3t3-3V3M7 3v18M19 3q-5 4-4 10h4V3v18"/></svg>' : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18q0 11-9 11T3 7ZM8 18v3h8v-3"/></svg>'}</span><span>${label}</span><span class="meal-band-rule"></span></div>
     <div class="meal-card-body">${conflictHtml}<h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}',${recipePortionsForMeal(recipe,recipe)})">${renderMealTitle(parts[1])}</button></h3>
-    ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}${altMenus.length ? '<p class="text-xs mt-2">元の料理 '+recipePortionsForMeal(recipe,recipe)+'人分＋別メニュー '+altMenus.length+'人分（材料・費用に反映済み）</p>' : ''}</div>
-    <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}',${recipePortionsForMeal(recipe,recipe)})">作り方 <span aria-hidden="true">›</span></button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更"><span aria-hidden="true">⇄</span> この１品を変更</button></div>
+    ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}</div>
+    <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}',${recipePortionsForMeal(recipe,recipe)})">作り方</button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更">この1品を変更</button></div>
 
   </article>`;
 }
@@ -5219,12 +5209,18 @@ window.openTodayMealScreen = function() {
   openMealScreen();
 };
 
+function mealDateForIndex(index) {
+  const date=new Date(activeWeekStart+'T12:00:00');date.setDate(date.getDate()+index);return date;
+}
+function mealDateLabel(index) {
+  const date=mealDateForIndex(index);return (date.getMonth()+1)+'月'+date.getDate()+'日（'+['日','月','火','水','木','金','土'][date.getDay()]+'）';
+}
 function updateWeeklyDisplaySwitch(mode = state.weeklyViewMode) {
   const group = document.getElementById('weekly-display-switch');
   if (group) group.hidden = state.activeTab !== 'weekly';
   for (const key of ['swipe','all']) {
     const button = document.getElementById('btn-weekly-view-' + key);
-    if(button) button.setAttribute('aria-pressed',String(mode === key));
+    if(button) {button.setAttribute('aria-pressed',String(mode === key));button.hidden=mode===key;}
   }
 }
 function syncAppScreen() {
@@ -5234,7 +5230,7 @@ function syncAppScreen() {
   document.body.dataset.screen = screen;
   document.getElementById('ud-home').hidden = screen !== 'home';
   document.getElementById('ud-workspace').hidden = screen === 'home';
-  const titles = {weekly:calendarWeekLabel()+'の献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
+  const titles = {weekly:'献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
   document.getElementById('ud-page-title').textContent = titles[screen] || '';
   document.getElementById('ud-setup').hidden = screen !== 'setup';
   document.getElementById('ud-settings').hidden = screen !== 'settings';

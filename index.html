@@ -1144,6 +1144,54 @@ body[data-screen="weekly"] .meal-card .border-l-2{margin-top:12px!important;padd
 body[data-screen="weekly"] .meal-card .border-l-2 .flex{flex-wrap:wrap;gap:4px}
 body[data-screen="weekly"] .weekly-overview .weekly-dish.meal-card{border-radius:12px!important}
 @media(max-width:360px){body[data-screen="weekly"] .meal-card-body{padding:14px!important}body[data-screen="weekly"] .meal-card-actions{padding:0 12px 12px!important}body[data-screen="weekly"] .meal-card-actions button{font-size:13px!important}}
+
+/* Adopted reference layout. Mascot uses the existing approved WebP unchanged. */
+.reference-topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px}
+.reference-title{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+.reference-title h1{margin:0!important;font-size:22px!important;font-weight:800;white-space:nowrap}
+.meal-gohan-approved{display:none;object-fit:contain}
+.reference-budget{display:none;min-height:40px;padding:6px 10px;border:1px solid #326f56;border-radius:7px;color:#24523f;background:#fff;font-size:13px;font-weight:700;white-space:nowrap}
+body[data-screen="weekly"] .meal-gohan-approved,body[data-screen="weekly"] .reference-budget{display:block}
+body[data-screen="weekly"] .ud-workspace{padding:8px 14px 0!important}
+body[data-screen="weekly"] .ud-home-back{font-size:14px;min-height:44px;white-space:nowrap}
+body[data-screen="weekly"] [data-calendar-week-controls]{margin:12px 0 4px!important}
+body[data-screen="weekly"] .meal-week-disclosure{margin:0!important}
+body[data-screen="weekly"] .meal-week-disclosure>summary{min-height:44px;display:flex;justify-content:space-between;padding:8px 12px;border:1px solid #326f56;border-radius:7px;color:#24523f;font-size:14px;list-style:none}
+body[data-screen="weekly"] .meal-week-disclosure>summary::after{display:none}
+.meal-week-disclosure>summary strong{font-weight:800}.meal-week-disclosure>summary span{border-left:1px solid #d3d9d4;padding-left:14px;color:#303b33;font-weight:700}
+body[data-screen="weekly"] .ud-meal-context{min-height:48px!important;margin:0 0 6px!important}
+body[data-screen="weekly"] .ud-meal-context .weekly-estimate-status{font-size:13px!important;color:#303b33!important;font-weight:700}
+body[data-screen="weekly"] .weekly-display-switch{background:none!important;padding:0!important;flex:none}
+body[data-screen="weekly"] .weekly-display-switch button:not([hidden]){display:flex!important;min-height:36px!important;border:1px solid #326f56!important;border-radius:7px!important;font-size:13px!important;color:#24523f!important;background:#fff!important}
+body[data-screen="weekly"] .weekly-display-switch button[hidden]{display:none!important}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"]{min-height:52px!important;height:52px!important;padding:4px 0!important;border:0!important;border-radius:8px!important;box-shadow:none!important;outline:none!important;background:#e4eddf!important}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"] .reference-tab-date{font-size:19px!important;line-height:1.2!important;font-weight:800}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"] .reference-tab-weekday{display:block!important;font-size:14px!important;font-weight:700}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"][data-selected="true"]{background:#326f56!important;color:#fff!important}
+body[data-screen="weekly"] .reading-day-header{border:0!important;margin:12px 0 8px!important;padding:0!important;gap:6px;min-height:40px}
+body[data-screen="weekly"] .reading-day-header h2{font-size:20px!important;white-space:nowrap}
+body[data-screen="weekly"] .reading-day-header .meal-day-cost{margin-left:auto;font-size:12px;font-weight:700;white-space:nowrap}
+body[data-screen="weekly"] .reading-day-options>summary{font-size:20px;min-width:24px;min-height:40px;padding:0!important;display:flex;align-items:center;justify-content:center}
+body[data-screen="weekly"] .reading-day-options>summary::marker{content:''}
+body[data-screen="weekly"] .weekly-dish.meal-card{clip-path:none!important;border:1px solid #cbd0d1!important;border-radius:8px!important;background:#fff!important;padding:10px 12px 12px!important;margin:0 0 9px!important;box-shadow:none!important}
+body[data-screen="weekly"] .weekly-dish-main.meal-card{border-top:5px solid #39836f!important;padding-top:10px!important}
+body[data-screen="weekly"] .meal-card::before{display:none!important}
+body[data-screen="weekly"] .meal-card-band{background:none!important;color:#24523f!important;padding:0!important;min-height:24px;gap:8px;font-size:13px}
+body[data-screen="weekly"] .meal-card-band>span:nth-child(2){background:#e3ecde;border-radius:99px;padding:3px 13px;font-weight:800}
+body[data-screen="weekly"] .meal-card-band>span:first-child{display:none}
+body[data-screen="weekly"] .weekly-dish-main .meal-card-band>span:first-child{display:block}
+body[data-screen="weekly"] .meal-band-rule{display:none}
+body[data-screen="weekly"] .meal-card-body{background:none!important;padding:8px 0!important}
+body[data-screen="weekly"] .weekly-dish-main .meal-title{font-size:22px!important;line-height:1.45!important;font-weight:800!important;text-align:left}
+body[data-screen="weekly"] .weekly-dish-side .meal-title,body[data-screen="weekly"] .weekly-dish-soup .meal-title{font-size:18px!important;line-height:1.5!important;font-weight:800!important;text-align:left}
+body[data-screen="weekly"] .meal-card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:none!important;border:0!important;padding:0!important}
+body[data-screen="weekly"] .meal-card-actions button{border:1px solid #326f56!important;border-radius:7px!important;min-height:40px!important;color:#24523f!important;font-size:14px!important;font-weight:700!important;background:#fff!important;padding:6px!important}
+.reference-alternative{background:#edf4e9;border-radius:9px;padding:0 10px;margin-top:10px;color:#24523f}
+.reference-alternative>summary{min-height:40px;padding:9px 0;font-weight:700;font-size:13px;cursor:pointer;line-height:1.5}
+.reference-alternative>div{font-size:12px;line-height:1.6;padding-bottom:10px}
+.reference-alternative button{min-height:40px;text-decoration:underline;font-weight:700}
+body[data-screen="weekly"] .ud-to-shopping{min-height:46px;border-radius:8px;font-size:15px;margin-top:0}
+@media(max-width:360px){.reference-title h1{font-size:20px!important}.meal-gohan-approved{width:30px;height:30px}.reference-budget{font-size:12px;padding:6px}.reference-topbar{gap:4px}body[data-screen="weekly"] .ud-meal-context .weekly-estimate-status{font-size:12px!important}}
 </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1168,12 +1216,10 @@ body[data-screen="weekly"] .weekly-overview .weekly-dish.meal-card{border-radius
     <div class="ud-home-links"><button type="button" onclick="openGuideModal()"><span aria-hidden="true">ⓘ</span> 使い方</button><button type="button" onclick="setAppScreen('settings')"><span aria-hidden="true">⚙</span> 設定</button></div>
   </section>
   <header id="ud-workspace" class="ud-workspace" hidden>
-    <button type="button" class="ud-home-back" onclick="returnAppHome()"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 11 12 2l10 9h-3v11h-5v-7h-4v7H5V11Z" fill="currentColor"/></svg><span>ホーム</span></button>
-    
-    <div class="meal-planning-header"><div class="ud-title-row"><h1 id="ud-page-title" tabindex="-1">今週の献立</h1><div id="weekly-display-switch" class="weekly-display-switch" role="group" aria-label="献立の表示方法" hidden><button type="button" id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')" aria-pressed="true" aria-controls="weekly-plan-container">1日ずつ</button><button type="button" id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')" aria-pressed="false" aria-controls="weekly-plan-container">7日まとめて</button></div></div>
-    <div data-calendar-week-controls></div><div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition" hidden></span><p id="weekly-estimate-status" class="weekly-estimate-status" role="status" hidden></p><button type="button" onclick="openMealSetup()">人数・予算</button></div></div>
+    <div class="reference-topbar"><button type="button" class="ud-home-back" onclick="returnAppHome()">‹ ホーム</button><div class="reference-title"><h1 id="ud-page-title" tabindex="-1">献立</h1><img class="meal-gohan-approved" src="assets/gohan-kun.webp" alt="" aria-hidden="true" width="38" height="38"></div><button type="button" class="reference-budget" onclick="openMealSetup()">人数・予算</button></div>
+    <div data-calendar-week-controls></div>
+    <div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition" hidden></span><p id="weekly-estimate-status" class="weekly-estimate-status" role="status" hidden></p><div id="weekly-display-switch" class="weekly-display-switch" hidden><button type="button" id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')" aria-controls="weekly-plan-container">1日表示</button><button type="button" id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')" aria-controls="weekly-plan-container">7日表示</button></div></div>
   </header>
-
   <!-- ==================== シンプルヘッダー ==================== -->
   <header class="home-header">
     <div class="home-header-inner">
@@ -1970,9 +2016,9 @@ body[data-screen="weekly"] .weekly-overview .weekly-dish.meal-card{border-radius
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_meal_readability"></script>
-  <script src="week-management.js?v=20261029_meal_readability"></script>
-  <script src="app.js?v=20261029_meal_readability"></script>
+  <script src="recipes.js?v=20261029_reference_meals"></script>
+  <script src="week-management.js?v=20261029_reference_meals"></script>
+  <script src="app.js?v=20261029_reference_meals"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1982,7 +2028,7 @@ body[data-screen="weekly"] .weekly-overview .weekly-dish.meal-card{border-radius
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_meal_readability', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_reference_meals', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

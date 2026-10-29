@@ -52,3 +52,13 @@ assert.equal(run('Object.values(state.weeklyPlan).filter(d=>priorMains.includes(
 assert.equal(run('new Set(Object.values(state.weeklyPlan).map(d=>d.side)).size'),7);
 assert.equal(run('new Set(Object.values(state.weeklyPlan).map(d=>d.soup)).size'),7);
 console.log('PASS saved-week history, four-week window, favorites, within-week variety, discarded generation');
+run(`RECIPES_DATA.push({id:'test-base',category:'main',baseIngredientsGroup:'test',containsDislikes:['カレー']},{id:'test-alt',category:'main',baseIngredientsGroup:'test',ingredients:[]});state.childrenCount=2;state.childrenPreferences={child1:{dislikes:[]},child2:{dislikes:['カレー']}};state.blacklistedRecipeIds=[];`);
+assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).unresolved.length`),0);
+assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).alternatives[0].childId`),'child2');
+run(`state.blacklistedRecipeIds=['test-alt']`);
+assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).unresolved[0]`),2);
+run(`state.blacklistedRecipeIds=[];getRecipeById('test-alt').containsDislikes=['カレー'];`);
+assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).unresolved[0]`),2);
+run(`getRecipeById('test-alt').containsDislikes=[];getRecipeById('test-alt').category='soup';`);
+assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).unresolved[0]`),2);
+console.log('PASS child-specific alternatives, blacklist, unsafe alternatives, category mismatch');

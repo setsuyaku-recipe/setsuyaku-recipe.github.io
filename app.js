@@ -471,12 +471,27 @@ function getRecipePreferenceConflicts(recipe) {
 function filterRecipesByDislikes(recipes) {
   return Array.isArray(recipes) ? recipes.filter(r=>r && getRecipePreferenceConflicts(r).length===0) : [];
 }
+function getChildMenuResolution(recipe) {
+  const alternatives=[];
+  const unresolved=[];
+  for (const childNumber of getRecipePreferenceConflicts(recipe)) {
+    const pref=state.childrenPreferences['child'+childNumber] || {dislikes:[],disabledFlavors:[]};
+    const alt=recipe.baseIngredientsGroup && RECIPES_DATA.find(r=>
+      r && r.id!==recipe.id && r.category===recipe.category &&
+      r.baseIngredientsGroup===recipe.baseIngredientsGroup &&
+      !state.blacklistedRecipeIds.includes(r.id) && canChildEat(r,pref));
+    if(alt) alternatives.push({childId:'child'+childNumber,label:'子ども'+childNumber,alt});
+    else unresolved.push(childNumber);
+  }
+  return {alternatives,unresolved};
+}
+
 function getPlanPreferenceConflicts() {
   if(!state.weeklyPlan) return [];
   const conflicts=[];
   for(const day of DAYS_OF_WEEK) for(const category of ['main','side','soup']) {
     const recipe=getRecipeById(state.weeklyPlan[day.id]?.[category]);
-    const children=getRecipePreferenceConflicts(recipe);
+    const children=getChildMenuResolution(recipe).unresolved;
     if(children.length) conflicts.push({dayId:day.id,category,children});
   }
   return conflicts;
@@ -2962,25 +2977,8 @@ function renderDishRow(dayId, category, recipe, label) {
     cardBorder = 'border-slate-100 hover:border-lime-200 bg-slate-50/60';
   }
 
-  // 代替メニューが必要な子供がいるかチェック
-  let altMenus = [];
-  if (state.childrenCount > 0) {
-    for (let i = 1; i <= state.childrenCount; i++) {
-      const childId = `child${i}`;
-      const pref = state.childrenPreferences[childId] || { dislikes: [], disabledFlavors: [] };
-      if (!canChildEat(recipe, pref) && recipe.baseIngredientsGroup) {
-        const alt = RECIPES_DATA.find(r => 
-          r &&
-          r.baseIngredientsGroup === recipe.baseIngredientsGroup && 
-          r.id !== recipe.id &&
-          canChildEat(r, pref)
-        );
-        if (alt) {
-          altMenus.push({ childId, label: `子供${i}`, alt });
-        }
-      }
-    }
-  }
+  const resolution=getChildMenuResolution(recipe);
+  const altMenus=resolution.alternatives;
 
   let altHtml = '';
   if (altMenus.length > 0) {
@@ -2994,8 +2992,8 @@ function renderDishRow(dayId, category, recipe, label) {
     `).join('');
   }
 
-  const conflictChildren=getRecipePreferenceConflicts(recipe);
-  const conflictHtml=conflictChildren.length ? `<p class="meal-preference-warning" role="note">子ども${conflictChildren.join('・')}の苦手食材の設定に合いません。変更を確認してください。</p>` : '';
+  const conflictChildren=resolution.unresolved;
+  const conflictHtml=conflictChildren.length ? `<p class="meal-preference-warning" role="note">子ども${conflictChildren.join('・')}の苦手食材に合う別メニューが見つかりません。「この１品を変更」でご確認ください。</p>` : '';
   const reading = getMealReadingName(recipe);
   const known = {
     '鶏ひき肉と豆腐のふんわり照り焼きつくね': ['鶏ひき肉と豆腐の', '照り焼きつくね', '甘辛だれの、やわらかつくね'],

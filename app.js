@@ -3216,6 +3216,7 @@ window.toggleBlacklist = function(recipeId, event) {
 };
 
 window.toggleShoppingDay = function(dayId) {
+  if(!DAYS_OF_WEEK.some(day=>day.id===dayId))return;
   const isCurrentlyChecked = state.shoppingDays.includes(dayId);
   const dayObj = DAYS_OF_WEEK.find(d => d.id === dayId);
   const dayLabel = dayObj ? dayObj.name : `${dayId}曜日`;
@@ -3405,7 +3406,33 @@ window.toggleHideSeasonings = function(val) {
   }
 };
 
+
+function selectedShoppingDaysLabel() {
+  const days=DAYS_OF_WEEK.filter(day=>state.shoppingDays.includes(day.id));
+  return days.length ? days.map(day=>day.name.replace('曜日','')).join('・')+'の'+days.length+'日分' : '曜日が未選択';
+}
+window.setShoppingDays = function(ids) {
+  state.shoppingDays=DAYS_OF_WEEK.map(day=>day.id).filter(id=>ids.includes(id));
+  saveShoppingDays();
+  state.renderedTabs.weekly=false;
+  renderShoppingList();
+  updateSummaryBadge();
+  updateCoreFlowSummary();
+  if(state.familySyncCode)pushSyncDataDebounced();
+};
+function renderShoppingDaySelector() {
+  const host=document.getElementById('shopping-day-buttons');
+  if(!host)return;
+  const summary=document.getElementById('shopping-days-summary');
+  if(summary)summary.textContent=selectedShoppingDaysLabel();
+  host.innerHTML=DAYS_OF_WEEK.map(day=>{
+    const selected=state.shoppingDays.includes(day.id);
+    return `<button type="button" aria-label="${day.name}" aria-pressed="${selected}" onclick="setShoppingDays(${selected ? "state.shoppingDays.filter(id=>id!=='"+day.id+"')" : "[...state.shoppingDays,'"+day.id+"']"})" style="min-width:0;min-height:44px;border:1px solid #667a5f;border-radius:10px;font-weight:800;background:${selected?'#326f56':'#fff'};color:${selected?'#fff':'#33442e'}">${day.name.replace('曜日','')}</button>`;
+  }).join('');
+}
+
 function renderShoppingList() {
+  renderShoppingDaySelector();
   const container = document.getElementById('shopping-list-container');
   const purchasedContainer = document.getElementById('shopping-purchased-container');
   const purchasedBadge = document.getElementById('purchased-count-badge');
@@ -3697,7 +3724,7 @@ function generateShoppingListText() {
 
   const customItems = Array.isArray(state.customShoppingItems) ? state.customShoppingItems.filter(it => !it.isChecked) : [];
   const weeklyCost = state.weeklyPlan ? calculatePlanTotalCost(state.weeklyPlan) : 0;
-  let text = `【🛒 ${calendarWeekRange()}の買い物リスト（${state.servings}人分・目安 ¥${weeklyCost.toLocaleString()}）】\n`;
+  let text = `【🛒 ${calendarWeekRange()}の買い物リスト【${selectedShoppingDaysLabel()}】（${state.servings}人分・目安 ¥${weeklyCost.toLocaleString()}）】\n`;
 
   let totalUnchecked = 0;
 

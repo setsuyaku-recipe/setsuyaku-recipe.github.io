@@ -62,3 +62,13 @@ assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).unresolved[
 run(`getRecipeById('test-alt').containsDislikes=[];getRecipeById('test-alt').category='soup';`);
 assert.equal(run(`getChildMenuResolution(getRecipeById('test-base')).unresolved[0]`),2);
 console.log('PASS child-specific alternatives, blacklist, unsafe alternatives, category mismatch');
+run(`renderShoppingList=()=>{};updateSummaryBadge=()=>{};updateCoreFlowSummary=()=>{};state.childrenCount=0;state.servings=5;RECIPES_DATA.push({id:'shopping-test',category:'main',ingredients:[{name:'テスト食材',amount:10,unit:'g'}]});state.weeklyPlan=Object.fromEntries(DAYS_OF_WEEK.map(d=>[d.id,{main:'shopping-test',side:null,soup:null}]));state.checkedItems={keep:true};globalThis.beforeShoppingPlan=JSON.stringify(state.weeklyPlan);window.setShoppingDays(['mon','tue']);`);
+assert.equal(run(`calculateAggregatedShoppingList()['テスト食材__all'].amount`),100);
+assert.equal(run(`selectedShoppingDaysLabel()`),'月・火の2日分');
+assert.equal(run(`JSON.stringify(state.weeklyPlan)`),run('beforeShoppingPlan'));
+assert.equal(run(`state.checkedItems.keep`),true);
+run(`window.setShoppingDays([])`);
+assert.equal(run(`Object.keys(calculateAggregatedShoppingList()).length`),0);
+run(`window.setShoppingDays(['wed','fri']);initializeCalendarWeeks()`);
+assert.equal(run(`JSON.stringify(state.shoppingDays)`),'["wed","fri"]');
+console.log('PASS two-day aggregation, arbitrary days, empty selection, plan and checks retained, selection persistence');

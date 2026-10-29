@@ -1824,9 +1824,9 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_share_prompt"></script>
-  <script src="week-management.js?v=20261029_share_prompt"></script>
-  <script src="app.js?v=20261029_share_prompt"></script>
+  <script src="recipes.js?v=20261029_child_portions"></script>
+  <script src="week-management.js?v=20261029_child_portions"></script>
+  <script src="app.js?v=20261029_child_portions"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1836,7 +1836,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_share_prompt', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_child_portions', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

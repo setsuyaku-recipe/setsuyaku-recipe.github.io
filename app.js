@@ -5052,12 +5052,16 @@ function setHomeMealTitle(element, text) {
   if (!element.ownerDocument) return;
   const doc = element.ownerDocument;
   const fragment = doc.createDocumentFragment();
-  const phrases = /((?:マイルド|甘口|麻婆豆腐|照り焼き|つくね|苦手食材))/g;
-  for (const part of text.split(phrases)) {
+  // Keep Japanese words intact; allow wrapping between words on narrow screens.
+  const parts = typeof Intl.Segmenter === 'function'
+    ? Array.from(new Intl.Segmenter('ja', { granularity: 'word' }).segment(text), item => item.segment)
+    : text.split(/(?<=[とのでをに、・])/u);
+  for (const part of parts) {
     if (!part) continue;
-    if (/^(マイルド|甘口|麻婆豆腐|照り焼き|つくね|苦手食材)$/.test(part)) {
-      const span = doc.createElement('span');span.className='home-title-phrase';span.textContent=part;fragment.appendChild(span);
-    } else fragment.appendChild(doc.createTextNode(part));
+    const span = doc.createElement('span');
+    span.className = 'home-title-phrase';
+    span.textContent = part;
+    fragment.appendChild(span);
   }
   element.replaceChildren(fragment);
 }
@@ -5077,7 +5081,7 @@ function updateHomeBudget() {
   action.textContent = recipe ? '献立を見る ›' : '献立を作る ›';
   label.textContent = recipe ? (activeWeekStart===mondayKey() ? '今日の主菜' : calendarWeekLabel()+'の主菜') : '家族に合わせて';
   setHomeMealTitle(title, recipe ? getCleanTitle(recipe) : '予算と人数から、１週間分をまとめて');
-  dayText.textContent = recipe ? calendarWeekRange()+'・'+day.name : '苦手な食材も設定できます';
+  dayText.textContent = recipe ? calendarWeekRange().replace(/\d{4}\//g, '')+'・'+day.name : '苦手な食材も設定できます';
 }
 window.openTodayMealScreen = function() {
   state.activeSwipeDayIndex = getTodayMealIndex();

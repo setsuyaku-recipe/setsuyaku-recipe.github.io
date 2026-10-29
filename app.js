@@ -154,6 +154,7 @@ function getExternalBadge(recipe) {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     loadSavedState();
+    initializeCalendarWeeks();
     if (!localStorage.getItem('frugal_daily_reading_view_v1')) {
       state.weeklyViewMode = 'swipe';
       localStorage.setItem(STORAGE_KEY_WEEKLY_VIEW_MODE, 'swipe');
@@ -165,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       applyRemoteData({ weeklyPlan: sharedSnapshot.w, servings: sharedSnapshot.s, targetBudget: sharedSnapshot.b,
         childrenCount: sharedSnapshot.k, childrenPreferences: sharedSnapshot.p, checkedItems: sharedSnapshot.ck,
         shoppingDays: sharedSnapshot.sd, customShoppingItems: sharedSnapshot.cs,
-        customRecipes: sharedSnapshot.cr, updatedAt: sharedSnapshot.t }, true);
+        customRecipes: sharedSnapshot.cr, weekStart: sharedSnapshot.ws, weeks: sharedSnapshot.weeks, cookedDays: sharedSnapshot.cd, updatedAt: sharedSnapshot.t }, true);
       delete state.pendingShareData;
       delete state.isJoiningFromUrl;
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -442,6 +443,7 @@ function saveCustomRecipes() {
 }
 
 function saveCookedDays() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_COOKED_DAYS, JSON.stringify(state.cookedDays));
 }
 
@@ -778,10 +780,12 @@ function generateRandomWeeklyPlan(showNotify = true) {
 }
 
 function savePlan() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_PLAN, JSON.stringify(state.weeklyPlan));
 }
 
 function saveServings() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_SERVINGS, state.servings.toString());
   if (state.familySyncCode && !state.isJoiningFromUrl && !state.isApplyingRemote) {
     pushSyncDataDebounced();
@@ -789,6 +793,7 @@ function saveServings() {
 }
 
 function saveBudget() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_BUDGET, state.targetBudget.toString());
   if (state.familySyncCode && !state.isJoiningFromUrl && !state.isApplyingRemote) {
     pushSyncDataDebounced();
@@ -796,10 +801,12 @@ function saveBudget() {
 }
 
 function saveChecked() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_CHECKED, JSON.stringify(state.checkedItems));
 }
 
 function saveShoppingDays() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_SHOPPING_DAYS, JSON.stringify(state.shoppingDays));
 }
 
@@ -816,6 +823,7 @@ function saveHideSeasonings() {
 }
 
 function saveCustomShoppingItems() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_CUSTOM_SHOPPING, JSON.stringify(state.customShoppingItems));
   if (state.familySyncCode && !state.isJoiningFromUrl && !state.isApplyingRemote) {
     pushSyncDataDebounced();
@@ -1381,6 +1389,7 @@ function updatePrintView() {
   } else {
     renderPrintWeeklyCalendar(container);
   }
+  const range=document.createElement('p');range.textContent=calendarWeekRange();range.style.cssText='font-weight:bold;font-size:12px';container.prepend(range);
 }
 
 function renderPrintWeeklyCalendar(container) {
@@ -1794,7 +1803,8 @@ function decodeSharePayload(encoded) {
 
 function getFamilyShareUrl(code) {
   const base = 'https://setsuyaku-recipe.github.io/';
-  const snapshot = { w: state.weeklyPlan, s: state.servings, b: state.targetBudget,
+  const calendar = calendarSyncFields();
+  const snapshot = { ws:calendar.weekStart, weeks:calendar.weeks, cd:state.cookedDays, w: state.weeklyPlan, s: state.servings, b: state.targetBudget,
     k: state.childrenCount, p: state.childrenPreferences, ck: state.checkedItems,
     sd: state.shoppingDays, cs: state.customShoppingItems, cr: state.customRecipes, t: Date.now() };
   const encoded = encodeSharePayload(snapshot);
@@ -1848,6 +1858,7 @@ function updateLastUpdatedDisplay(timestamp) {
 // 同期用フルペイロード
 function getSyncPayload() {
   return {
+    ...calendarSyncFields(),
     updatedAt: Date.now(),
     servings: state.servings,
     targetBudget: state.targetBudget,
@@ -1929,7 +1940,10 @@ function pushSyncDataDebounced() {
 function applyRemoteData(data, isSilent = false) {
   if (!data) return;
   if (data.updatedAt && state.lastSyncTime && data.updatedAt < state.lastSyncTime) return;
+  data = prepareCalendarRemoteData(data);
+  if (!data) return;
   let changed = false;
+  if (Array.isArray(data.cookedDays)) { state.cookedDays=data.cookedDays; saveCookedDays(); changed=true; }
 
   if (Array.isArray(data.customRecipes)) {
     for (const recipe of data.customRecipes) {
@@ -2423,6 +2437,8 @@ function renderActiveTab(force = false) {
 }
 
 function render(force = false) {
+  persistCalendarWeeks();
+  renderCalendarWeekControls();
   renderTabs();
   updateBudgetControls();
   updateSummaryBadge();
@@ -2499,7 +2515,7 @@ function updateSummaryBadge() {
   const status=document.getElementById('weekly-estimate-status');
   if(status){status.hidden=!state.weeklyPlan;status.dataset.overBudget=String(diff>0);status.textContent=`夕食7日分の献立目安 約${weeklyTotalCost.toLocaleString()}円（${diff>0 ? '予算を'+diff.toLocaleString()+'円超過' : '予算内'}）`;}
   const balance = document.getElementById('budget-balance');
-  if (balance) balance.textContent = `${diff > 0 ? '今週の予算超過' : '週予算と献立目安の差額'} ¥${Math.abs(diff).toLocaleString()}`;
+  if (balance) balance.textContent = `${diff > 0 ? '選択した週の予算超過' : '週予算と献立目安の差額'} ¥${Math.abs(diff).toLocaleString()}`;
   const estimate = document.getElementById('budget-estimate');
   if (estimate) estimate.textContent = `予算 ¥${target.toLocaleString()} ／ 献立の予定額 ¥${weeklyTotalCost.toLocaleString()}`;
   const meter = document.getElementById('budget-meter');
@@ -3685,7 +3701,7 @@ function generateShoppingListText() {
 
   const customItems = Array.isArray(state.customShoppingItems) ? state.customShoppingItems.filter(it => !it.isChecked) : [];
   const weeklyCost = state.weeklyPlan ? calculatePlanTotalCost(state.weeklyPlan) : 0;
-  let text = `【🛒 今週の買い物リスト（${state.servings}人分・目安 ¥${weeklyCost.toLocaleString()}）】\n`;
+  let text = `【🛒 ${calendarWeekRange()}の買い物リスト（${state.servings}人分・目安 ¥${weeklyCost.toLocaleString()}）】\n`;
 
   let totalUnchecked = 0;
 
@@ -3711,7 +3727,7 @@ function generateShoppingListText() {
   });
 
   if (totalUnchecked === 0) {
-    return `【🛒 今週の買い物リスト（${state.servings}人分）】\nすべての食材・メモを購入済みです！🎉`;
+    return `【🛒 ${calendarWeekRange()}の買い物リスト（${state.servings}人分）】\nすべての食材・メモを購入済みです！🎉`;
   }
 
   if (state.hideSeasonings && hiddenCount > 0) {
@@ -5084,9 +5100,9 @@ function updateHomeBudget() {
   const day = DAYS_OF_WEEK[getTodayMealIndex()];
   const recipe = getRecipeById(state.weeklyPlan?.[day.id]?.main);
   action.textContent = recipe ? '献立を見る ›' : '献立を作る ›';
-  label.textContent = recipe ? '今日の主菜' : '家族に合わせて';
+  label.textContent = recipe ? (activeWeekStart===mondayKey() ? '今日の主菜' : calendarWeekLabel()+'の主菜') : '家族に合わせて';
   setHomeMealTitle(title, recipe ? getCleanTitle(recipe) : '予算と人数から、１週間分をまとめて');
-  dayText.textContent = recipe ? day.name : '苦手な食材も設定できます';
+  dayText.textContent = recipe ? calendarWeekRange()+'・'+day.name : '苦手な食材も設定できます';
 }
 window.openTodayMealScreen = function() {
   state.activeSwipeDayIndex = getTodayMealIndex();
@@ -5108,7 +5124,7 @@ function syncAppScreen() {
   document.body.dataset.screen = screen;
   document.getElementById('ud-home').hidden = screen !== 'home';
   document.getElementById('ud-workspace').hidden = screen === 'home';
-  const titles = {weekly:'今週の献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
+  const titles = {weekly:calendarWeekLabel()+'の献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
   document.getElementById('ud-page-title').textContent = titles[screen] || '';
   document.getElementById('ud-setup').hidden = screen !== 'setup';
   document.getElementById('ud-settings').hidden = screen !== 'settings';
@@ -5212,6 +5228,7 @@ function setupUniversalNavigation() {
 
 // Recheck the day when a home-screen app returns after midnight.
  document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});
+
 
 
 

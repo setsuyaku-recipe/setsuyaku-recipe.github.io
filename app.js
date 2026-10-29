@@ -1929,10 +1929,10 @@ function pushSyncDataDebounced() {
 
 // リモートデータの適用
 function applyRemoteData(data, isSilent = false) {
-  if (!data) return;
-  if (data.updatedAt && state.lastSyncTime && data.updatedAt < state.lastSyncTime) return;
-  data = prepareCalendarRemoteData(data);
-  if (!data) return;
+  if (!data) return false;
+  if (data.updatedAt && state.lastSyncTime && data.updatedAt < state.lastSyncTime) return false;
+  data = prepareCalendarRemoteData(data, !isSilent || !!state.isJoiningFromUrl || !!state.pendingShareData);
+  if (!data) return false;
   let changed = false;
   if (Array.isArray(data.cookedDays)) { state.cookedDays=data.cookedDays; saveCookedDays(); changed=true; }
 
@@ -2040,6 +2040,7 @@ function applyRemoteData(data, isSilent = false) {
   } finally {
     state.isApplyingRemote = false;
   }
+  return true;
 }
 
 // 更新方式（C案）: 画面表示時・ブラウザ復帰時・手動更新（ポーリング完全廃止）
@@ -2054,8 +2055,9 @@ async function fetchAndApplySync(isSilent = false) {
     if (!isSilent) updateSyncStatusUI('syncing');
     const remoteData = await fetchSyncData(state.familySyncCode);
     if (remoteData) {
-      applyRemoteData(remoteData, isSilent);
+      const applied = applyRemoteData(remoteData, isSilent);
       updateSyncStatusUI('connected');
+      return applied;
     } else {
       updateSyncStatusUI('connected');
     }
@@ -2072,8 +2074,8 @@ window.triggerManualSync = async function() {
     return;
   }
   showToast('最新データを取得中...');
-  await fetchAndApplySync(false);
-  showToast('最新データに更新しました！');
+  const applied = await fetchAndApplySync(false);
+  showToast(applied ? '共有内容を更新しました' : '献立の変更はありません。今の内容を残しました');
 };
 
 // UIステータス表示更新

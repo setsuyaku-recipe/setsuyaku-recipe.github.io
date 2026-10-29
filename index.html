@@ -1212,6 +1212,38 @@ body[data-screen="weekly"] .ud-meal-context{display:grid!important;grid-template
 body[data-screen="weekly"] .ud-meal-context #weekly-display-switch{justify-self:end;margin:0!important}
 @media(max-width:360px){.reference-topbar{grid-template-columns:88px minmax(0,1fr) 88px;gap:6px!important}.reference-topbar .meal-gohan-approved{width:30px!important;height:30px!important}.reference-topbar>.reference-title{gap:3px}.reference-topbar>.reference-budget,.reference-topbar>.ud-home-back{font-size:12px!important}}
 .reference-topbar>button:focus-visible{outline:3px solid #326f56;outline-offset:3px}
+
+/* Quiet meal actions and geometrically centred view switch. */
+body[data-screen="weekly"] .meal-card-actions{gap:8px!important;padding-top:4px!important}
+body[data-screen="weekly"] .meal-card-actions button,
+body[data-screen="weekly"] .meal-card-actions button+button{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  min-height:44px!important;height:auto!important;margin:0!important;padding:8px 6px!important;
+  border:1px solid #e1e5dc!important;border-radius:8px!important;
+  background:#f8faf5!important;color:#59665a!important;font-size:13px!important;
+  line-height:1.4!important;font-weight:500!important;text-decoration:none!important;box-shadow:none!important
+}
+body[data-screen="weekly"] .meal-card-actions button span{font-size:inherit!important;font-weight:inherit!important;color:inherit!important}
+body[data-screen="weekly"] #weekly-display-switch{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;
+  width:auto!important;min-width:0!important;height:44px!important;
+  margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important
+}
+body[data-screen="weekly"] #weekly-display-switch[hidden]{display:none!important}
+body[data-screen="weekly"] #weekly-display-switch button:not([hidden]){
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:none!important;min-width:80px!important;width:auto!important;
+  height:44px!important;min-height:44px!important;max-height:none!important;
+  margin:0!important;padding:0 12px!important;box-sizing:border-box!important;
+  border:1px solid #cbd6ca!important;border-radius:8px!important;
+  background:#fff!important;color:#326f56!important;
+  font-size:13px!important;font-weight:600!important;line-height:1!important;
+  text-align:center!important;text-indent:0!important;text-decoration:none!important;
+  vertical-align:middle!important;box-shadow:none!important;transform:none!important
+}
+body[data-screen="weekly"] #weekly-display-switch button[hidden]{display:none!important}
+body[data-screen="weekly"] #weekly-display-switch button::before,
+body[data-screen="weekly"] #weekly-display-switch button::after{content:none!important}
 </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -2036,9 +2068,9 @@ body[data-screen="weekly"] .ud-meal-context #weekly-display-switch{justify-self:
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_meal_alignment"></script>
-  <script src="week-management.js?v=20261029_meal_alignment"></script>
-  <script src="app.js?v=20261029_meal_alignment"></script>
+  <script src="recipes.js?v=20261029_quiet_actions"></script>
+  <script src="week-management.js?v=20261029_quiet_actions"></script>
+  <script src="app.js?v=20261029_quiet_actions"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -2048,7 +2080,7 @@ body[data-screen="weekly"] .ud-meal-context #weekly-display-switch{justify-self:
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_meal_alignment', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_quiet_actions', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

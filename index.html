@@ -1192,6 +1192,26 @@ body[data-screen="weekly"] .meal-card-actions button{border:1px solid #326f56!im
 .reference-alternative button{min-height:40px;text-decoration:underline;font-weight:700}
 body[data-screen="weekly"] .ud-to-shopping{min-height:46px;border-radius:8px;font-size:15px;margin-top:0}
 @media(max-width:360px){.reference-title h1{font-size:20px!important}.meal-gohan-approved{width:30px;height:30px}.reference-budget{font-size:12px;padding:6px}.reference-topbar{gap:4px}body[data-screen="weekly"] .ud-meal-context .weekly-estimate-status{font-size:12px!important}}
+
+/* Equal header columns and one shared horizontal edge for the meal screen. */
+.reference-topbar{display:grid!important;grid-template-columns:96px minmax(0,1fr) 96px;align-items:center;gap:8px!important}
+.reference-topbar>.ud-home-back{display:flex!important;align-items:center;justify-content:center;gap:6px!important;min-height:44px!important;width:100%;padding:8px 6px!important;border:1px solid #326f56!important;border-radius:8px!important;background:#fff!important;color:#24523f!important;font-size:13px!important;font-weight:700!important;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+.reference-topbar>.ud-home-back svg{flex:none;display:block}
+.reference-topbar>.reference-title{justify-self:center;display:flex;align-items:center;gap:6px}
+.reference-topbar>.reference-title h1{margin:0!important;line-height:1.3}
+.reference-topbar>.reference-budget{width:100%;min-height:44px!important;padding:8px 6px!important;border-radius:8px!important;font-size:13px!important;box-sizing:border-box}
+body[data-screen="weekly"] .ud-workspace,body[data-screen="weekly"] main{width:100%!important;max-width:640px!important;box-sizing:border-box!important;margin-left:auto!important;margin-right:auto!important;padding-left:14px!important;padding-right:14px!important}
+body[data-screen="weekly"] #panel-weekly,body[data-screen="weekly"] #weekly-plan-container{width:100%!important;max-width:none!important;margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important;box-sizing:border-box}
+body[data-screen="weekly"] #weekly-plan-container>div>div{max-width:none!important;margin-left:0!important;margin-right:0!important}
+body[data-screen="weekly"] #weekly-plan-container>div>div:has(>[class*="grid-cols-7"]){padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+body[data-screen="weekly"] #weekly-swipe-slider{padding-left:0!important;padding-right:0!important;margin:0!important;width:100%!important;box-sizing:border-box}
+body[data-screen="weekly"] [id^="swipe-card-"]:not(.weekly-overview-day){width:100%!important;margin-left:0!important;margin-right:0!important}
+body[data-screen="weekly"] [id^="swipe-card-"]:not(.weekly-overview-day)>div:not(.reading-day-header){padding-left:0!important;padding-right:0!important}
+body[data-screen="weekly"] .weekly-dish.meal-card{width:100%;box-sizing:border-box!important;margin-left:0!important;margin-right:0!important}
+body[data-screen="weekly"] .ud-meal-context{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px!important}
+body[data-screen="weekly"] .ud-meal-context #weekly-display-switch{justify-self:end;margin:0!important}
+@media(max-width:360px){.reference-topbar{grid-template-columns:88px minmax(0,1fr) 88px;gap:6px!important}.reference-topbar .meal-gohan-approved{width:30px!important;height:30px!important}.reference-topbar>.reference-title{gap:3px}.reference-topbar>.reference-budget,.reference-topbar>.ud-home-back{font-size:12px!important}}
+.reference-topbar>button:focus-visible{outline:3px solid #326f56;outline-offset:3px}
 </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1216,7 +1236,7 @@ body[data-screen="weekly"] .ud-to-shopping{min-height:46px;border-radius:8px;fon
     <div class="ud-home-links"><button type="button" onclick="openGuideModal()"><span aria-hidden="true">ⓘ</span> 使い方</button><button type="button" onclick="setAppScreen('settings')"><span aria-hidden="true">⚙</span> 設定</button></div>
   </section>
   <header id="ud-workspace" class="ud-workspace" hidden>
-    <div class="reference-topbar"><button type="button" class="ud-home-back" onclick="returnAppHome()">‹ ホーム</button><div class="reference-title"><h1 id="ud-page-title" tabindex="-1">献立</h1><img class="meal-gohan-approved" src="assets/gohan-kun.webp" alt="" aria-hidden="true" width="38" height="38"></div><button type="button" class="reference-budget" onclick="openMealSetup()">人数・予算</button></div>
+    <div class="reference-topbar"><button type="button" class="ud-home-back" onclick="returnAppHome()" aria-label="ホームへ戻る"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5M5 9v12h5v-7h4v7h5V9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>ホームへ</span></button><div class="reference-title"><h1 id="ud-page-title" tabindex="-1">献立</h1><img class="meal-gohan-approved" src="assets/gohan-kun.webp" alt="" aria-hidden="true" width="38" height="38"></div><button type="button" class="reference-budget" onclick="openMealSetup()">人数・予算</button></div>
     <div data-calendar-week-controls></div>
     <div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition" hidden></span><p id="weekly-estimate-status" class="weekly-estimate-status" role="status" hidden></p><div id="weekly-display-switch" class="weekly-display-switch" hidden><button type="button" id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')" aria-controls="weekly-plan-container">1日表示</button><button type="button" id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')" aria-controls="weekly-plan-container">7日表示</button></div></div>
   </header>
@@ -2016,9 +2036,9 @@ body[data-screen="weekly"] .ud-to-shopping{min-height:46px;border-radius:8px;fon
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_reference_meals"></script>
-  <script src="week-management.js?v=20261029_reference_meals"></script>
-  <script src="app.js?v=20261029_reference_meals"></script>
+  <script src="recipes.js?v=20261029_meal_alignment"></script>
+  <script src="week-management.js?v=20261029_meal_alignment"></script>
+  <script src="app.js?v=20261029_meal_alignment"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -2028,7 +2048,7 @@ body[data-screen="weekly"] .ud-to-shopping{min-height:46px;border-radius:8px;fon
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_reference_meals', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_meal_alignment', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

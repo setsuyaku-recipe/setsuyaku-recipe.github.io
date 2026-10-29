@@ -995,7 +995,26 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
 .meal-preference-warning{font-size:13px;line-height:1.6;color:#763e15;background:#fff3d7;border:1px solid #dfc18e;border-radius:6px;padding:8px;margin:0 0 10px;font-weight:500}.preference-conflict-notice{order:0;width:100%;box-sizing:border-box;font-size:14px;line-height:1.7;padding:12px;border:1px solid #dfc18e;border-radius:10px;background:#fff6df;color:#6c421a;margin:0 0 12px}
 .budget-scope-short{clear:both;font-size:14px;line-height:1.6;color:#52644d;margin:0 0 12px}.budget-scope{font-size:14px;line-height:1.7;color:#465f49;margin:0 0 18px}.budget-scope summary{min-height:44px;cursor:pointer;padding:10px 0}.budget-scope p{margin-top:8px}.weekly-generation-notice{order:0;font-size:14px;line-height:1.7;border:1px solid #d8ba83;background:#fff5dd;color:#68431f;padding:12px;border-radius:10px;margin:0 0 12px;width:100%;box-sizing:border-box}
 .weekly-estimate-status{order:0;font-size:14px;line-height:1.6;color:#32624b;margin:0 0 10px}.weekly-estimate-status[data-over-budget="true"]{color:#78451f;background:#fff3dd;padding:8px 10px;border-radius:8px}
-  </style>
+  
+.shopping-days-panel{margin:0 0 12px;border:1px solid #d6dfd1;border-radius:12px;background:#fffdf9}
+.shopping-days-panel>summary{min-height:48px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer;padding:10px 12px;list-style:none}
+.shopping-days-panel>summary::-webkit-details-marker{display:none}
+.shopping-days-panel>summary>span{font-size:12px;margin-left:auto;color:#52644c}
+.shopping-days-panel>summary::after{content:'⌄';color:#326f56}
+.shopping-days-panel[open]>summary::after{content:'⌃'}
+.shopping-days-content{padding:0 12px 12px}.shopping-days-hint{font-size:12px;color:#665f56;margin:0 0 8px}
+.shopping-day-choice{display:flex;gap:12px;align-items:flex-start;border-top:1px solid #e8e0d6;padding:6px 0}
+.shopping-day-choice>label{display:flex;gap:8px;align-items:center;min-height:44px;flex:none;cursor:pointer}
+.shopping-day-choice input{width:22px;height:22px;accent-color:#326f56}
+.shopping-day-choice label span{font-weight:800;min-width:34px}.shopping-day-choice small{display:block;font-weight:400;font-size:11px}
+.shopping-day-choice>details{flex:1;min-width:0}.shopping-day-choice summary{min-height:44px;padding:10px 0;font-size:14px;line-height:1.6;cursor:pointer;overflow-wrap:anywhere}
+.shopping-day-dishes{font-size:12px;line-height:1.8;color:#665f56;padding-bottom:8px}
+.shopping-days-footer{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.shopping-days-footer button{min-height:44px;font-size:12px;color:#326f56;text-decoration:underline}
+#shopping-days-confirm{margin-left:auto;background:#326f56;color:white;border-radius:10px;padding:8px 12px;text-decoration:none;font-weight:800}
+#shopping-days-confirm:disabled{opacity:.5}
+.shopping-days-panel :focus-visible{outline:3px solid #326f56;outline-offset:3px}
+</style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
 
@@ -1173,12 +1192,14 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
     <!-- ================= 2. 買い物リストタブ ================= -->
     <section id="panel-shopping" role="tabpanel" aria-labelledby="tab-shopping" tabindex="0" class="tab-content hidden" hidden>
       <div class="shopping-budget-summary"><div><span class="shopping-budget-caption">週予算と献立目安の差額</span><p id="shopping-budget-remaining" class="shopping-budget-note"></p></div><details class="shopping-explanation"><summary aria-label="金額と数量の見方">ⓘ</summary><div><p>夕食の主菜・副菜・汁物について、選択した曜日の献立から計算した目安です。朝食・昼食・おやつ・飲み物や、レシピ材料にない米・パンなどは含みません。実際の購入額や使える残金ではありません。買い足しメモの金額は含みません。</p><p>買う量の目安として、人参は1本150g、豆腐は1丁300gで換算。商品の大きさに合わせて調整してください。</p></div></details></div>
-      <section aria-label="買い物する曜日" style="margin:0 0 12px;padding:12px;border:1px solid #d6dfd1;border-radius:14px;background:#fffdf9">
-        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px"><strong>買い物する曜日</strong><span id="shopping-days-summary" role="status" style="font-size:13px"></span></div>
-        <p style="font-size:12px;margin:6px 0 10px">必要な曜日だけ選べます。2日分なら、その2日を選択。</p>
-        <div id="shopping-day-buttons" role="group" aria-label="曜日を選ぶ" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px"></div>
-        <div style="display:flex;gap:12px;margin-top:8px"><button type="button" onclick="setShoppingDays(DAYS_OF_WEEK.map(day=>day.id))" style="min-height:44px;text-decoration:underline">全7日を選ぶ</button><button type="button" onclick="setShoppingDays([])" style="min-height:44px;text-decoration:underline">すべて外す</button></div>
-      </section>
+      <details id="shopping-days-panel" class="shopping-days-panel" ontoggle="beginShoppingDayEdit()">
+        <summary><strong id="shopping-days-summary"></strong><span>献立・曜日を確認</span></summary>
+        <div class="shopping-days-content">
+          <p class="shopping-days-hint">買う日を選択。料理名を押すと副菜・汁物を確認できます。</p>
+          <div id="shopping-day-buttons"></div>
+          <div class="shopping-days-footer"><button type="button" onclick="selectAllShoppingDraft()">全7日を選ぶ</button><button type="button" onclick="clearShoppingDraft()">すべて外す</button><button type="button" id="shopping-days-confirm" onclick="confirmShoppingDays()">決定</button></div>
+        </div>
+      </details>
       <!-- 最上段：買い物タイトル＆即座に操作できるスリムバー（スクロール不要で食材リスト直撃） -->
       <div class="mb-2 sm:mb-2.5 flex items-center justify-between gap-2 flex-wrap bg-white p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div class="flex items-center gap-2">
@@ -1830,9 +1851,9 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_shopping_days"></script>
-  <script src="week-management.js?v=20261029_shopping_days"></script>
-  <script src="app.js?v=20261029_shopping_days"></script>
+  <script src="recipes.js?v=20261029_shopping_fold"></script>
+  <script src="week-management.js?v=20261029_shopping_fold"></script>
+  <script src="app.js?v=20261029_shopping_fold"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1842,7 +1863,7 @@ body .meal-card .meal-card-body{padding-top:14px;padding-bottom:14px}
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_shopping_days', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_shopping_fold', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

@@ -3420,15 +3420,65 @@ window.setShoppingDays = function(ids) {
   updateCoreFlowSummary();
   if(state.familySyncCode)pushSyncDataDebounced();
 };
-function renderShoppingDaySelector() {
+let shoppingDaysDraft=null;
+function shoppingMenuDate(index) {
+  const date=new Date(activeWeekStart+'T12:00:00');
+  date.setDate(date.getDate()+index);
+  return (date.getMonth()+1)+'/'+date.getDate();
+}
+window.beginShoppingDayEdit=function() {
+  const panel=document.getElementById('shopping-days-panel');
+  if(!panel?.open){shoppingDaysDraft=null;return;}
+  shoppingDaysDraft=[...state.shoppingDays];
+  renderShoppingDayChoices();
+};
+window.editShoppingDay=function(dayId,checked) {
+  if(!shoppingDaysDraft)shoppingDaysDraft=[...state.shoppingDays];
+  shoppingDaysDraft=DAYS_OF_WEEK.map(d=>d.id).filter(id=>id===dayId ? checked : shoppingDaysDraft.includes(id));
+  updateShoppingDayDecision();
+};
+window.selectAllShoppingDraft=function() {
+  shoppingDaysDraft=DAYS_OF_WEEK.map(day=>day.id);
+  renderShoppingDayChoices();
+};
+window.clearShoppingDraft=function() {
+  shoppingDaysDraft=[];
+  renderShoppingDayChoices();
+};
+function updateShoppingDayDecision() {
+  const button=document.getElementById('shopping-days-confirm');
+  const count=(shoppingDaysDraft||state.shoppingDays).length;
+  if(button){button.disabled=!count;button.textContent=count ? 'この'+count+'日分で決定' : '曜日を選んでください';}
+}
+window.confirmShoppingDays=function() {
+  if(!shoppingDaysDraft?.length)return;
+  const selected=[...shoppingDaysDraft];
+  shoppingDaysDraft=null;
+  window.setShoppingDays(selected);
+  const panel=document.getElementById('shopping-days-panel');
+  if(panel){panel.open=false;panel.querySelector('summary')?.focus({preventScroll:true});}
+};
+function renderShoppingDayChoices() {
   const host=document.getElementById('shopping-day-buttons');
   if(!host)return;
+  const selected=shoppingDaysDraft||state.shoppingDays;
+  host.innerHTML=DAYS_OF_WEEK.map((day,index)=>{
+    const plan=state.weeklyPlan?.[day.id];
+    const main=getRecipeById(plan?.main);
+    const mainTitle=main ? getCleanTitle(main) : '献立がありません';
+    const details=['side','soup'].map((category)=>{const recipe=getRecipeById(plan?.[category]);return '<p>'+({side:'副菜',soup:'汁物'}[category])+'：'+escapeUiText(recipe ? getCleanTitle(recipe) : '未設定')+'</p>';}).join('');
+    return `<div class="shopping-day-choice"><label><input type="checkbox" ${selected.includes(day.id)?'checked':''} onchange="editShoppingDay('${day.id}',this.checked)" aria-label="${day.name}を買い物に入れる"><span>${escapeUiText(day.name.replace('曜日',''))}<small>${shoppingMenuDate(index)}</small></span></label><details><summary>${escapeUiText(mainTitle)}</summary><div class="shopping-day-dishes">${details}</div></details></div>`;
+  }).join('');
+  updateShoppingDayDecision();
+}
+function renderShoppingDaySelector() {
   const summary=document.getElementById('shopping-days-summary');
   if(summary)summary.textContent=selectedShoppingDaysLabel();
-  host.innerHTML=DAYS_OF_WEEK.map(day=>{
-    const selected=state.shoppingDays.includes(day.id);
-    return `<button type="button" aria-label="${day.name}" aria-pressed="${selected}" onclick="setShoppingDays(${selected ? "state.shoppingDays.filter(id=>id!=='"+day.id+"')" : "[...state.shoppingDays,'"+day.id+"']"})" style="min-width:0;min-height:44px;border:1px solid #667a5f;border-radius:10px;font-weight:800;background:${selected?'#326f56':'#fff'};color:${selected?'#fff':'#33442e'}">${day.name.replace('曜日','')}</button>`;
-  }).join('');
+  const panel=document.getElementById('shopping-days-panel');
+  if(!panel)return;
+  shoppingDaysDraft=[...state.shoppingDays];
+  renderShoppingDayChoices();
+  if(!state.shoppingDays.length)panel.open=true;
 }
 
 function renderShoppingList() {
@@ -5166,6 +5216,12 @@ function setAppScreen(screen, push = true) {
   if(state.activeTab==='dislikes' && screen!=='dislikes') discardPreferenceDraft();
   if (!['home','weekly','shopping','recipes','setup','dislikes','sharing','settings'].includes(screen)) screen = 'home';
   const changed = state.activeTab !== screen;
+  if(changed && screen==='shopping') {
+    const panel=document.getElementById('shopping-days-panel');
+    if(panel)panel.open=false;
+    shoppingDaysDraft=null;
+    state.renderedTabs.shopping=false;
+  }
   state.activeTab = screen;
   if (changed && push) history.pushState({udScreen:screen},'',location.pathname+location.search);
   render();

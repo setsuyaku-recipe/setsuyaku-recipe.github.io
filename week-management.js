@@ -115,13 +115,28 @@ function calendarSyncFields() {
   persistCalendarWeeks();
   return {weekStart:activeWeekStart,weeks:copyWeekData(calendarWeeks),cookedDays:state.cookedDays};
 }
-function prepareCalendarRemoteData(data) {
+function prepareCalendarRemoteData(data, allowLegacyImport = false) {
   if (!calendarWeeksReady) return data;
   persistCalendarWeeks();
   // Old clients have no week identity: keep all dated plans and import into a separate slot.
   if (!validWeekKey(data.weekStart)) {
     if (!data.weeklyPlan) return data;
-    if (!window.confirm('日付のない旧版の共有データです。表示中の週に取り込みますか？ほかの週は保持します。')) return null;
+    // Undated plans must never overwrite a calendar week during background sync.
+    if (!allowLegacyImport) return null;
+    const receiptKey = 'frugal_legacy_share_receipt_v1';
+    const signature = JSON.stringify([state.familySyncCode || '', data]);
+    let receipts = [];
+    try { receipts = JSON.parse(localStorage.getItem(receiptKey) || '[]'); } catch (_) {}
+    if (!Array.isArray(receipts)) receipts = [];
+    if (receipts.includes(signature)) return null;
+    const accepted = window.confirm(
+      '共有された献立を受け取りますか？\\n\\n' +
+      'この献立には週の日付が付いていません。\\n' +
+      'OK：表示中の週（' + calendarWeekRange() + '）の献立・予算・人数・苦手食材・買い物リストを共有内容に置き換えます。ほかの週の献立は残ります。\\n' +
+      'キャンセル：今の内容を残します。\\n\\n同じ共有内容の確認は、次回から表示しません。'
+    );
+    try { localStorage.setItem(receiptKey, JSON.stringify([...receipts, signature].slice(-12))); } catch (_) {}
+    if (!accepted) return null;
     return {...data,cookedDays:[]};
   }
   const records=data.weeks||{};

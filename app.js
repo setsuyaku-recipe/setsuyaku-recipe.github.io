@@ -154,6 +154,7 @@ function getExternalBadge(recipe) {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     loadSavedState();
+    initializeCalendarWeeks();
     if (!localStorage.getItem('frugal_daily_reading_view_v1')) {
       state.weeklyViewMode = 'swipe';
       localStorage.setItem(STORAGE_KEY_WEEKLY_VIEW_MODE, 'swipe');
@@ -165,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       applyRemoteData({ weeklyPlan: sharedSnapshot.w, servings: sharedSnapshot.s, targetBudget: sharedSnapshot.b,
         childrenCount: sharedSnapshot.k, childrenPreferences: sharedSnapshot.p, checkedItems: sharedSnapshot.ck,
         shoppingDays: sharedSnapshot.sd, customShoppingItems: sharedSnapshot.cs,
-        customRecipes: sharedSnapshot.cr, updatedAt: sharedSnapshot.t }, true);
+        customRecipes: sharedSnapshot.cr, weekStart: sharedSnapshot.ws, weeks: sharedSnapshot.weeks, cookedDays: sharedSnapshot.cd, updatedAt: sharedSnapshot.t }, true);
       delete state.pendingShareData;
       delete state.isJoiningFromUrl;
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -442,6 +443,7 @@ function saveCustomRecipes() {
 }
 
 function saveCookedDays() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_COOKED_DAYS, JSON.stringify(state.cookedDays));
 }
 
@@ -562,7 +564,7 @@ function buildLowCostPlan(pools) {
     plan[day.id]={};
     ['main','side','soup'].forEach((category,k)=>{
       // Keep seven different recipes where possible; repeat only if the safe pool is smaller.
-      plan[day.id][category]=sorted[k][sorted[k].length >= 7 ? index : 0].id;
+      plan[day.id][category]=sorted[k][index % sorted[k].length].id;
     });
   });
   return plan;
@@ -605,18 +607,9 @@ function generateRandomWeeklyPlan(showNotify = true) {
     return reportPlanGenerationError(`夕食7日分を予算${state.targetBudget.toLocaleString()}円以内で作成できませんでした。現在の条件で組み合わせた低価格の献立目安は約${lowCost.toLocaleString()}円です。予算は自動変更していません。`);
   }
 
-  // 3. 直近30日間の重複防止フィルター（お気に入りレシピ以外は直近履歴にあるものを極力除外）
-  const filterByHistory = (list) => {
-    const unrecent = list.filter(r => {
-      // お気に入り登録されたものは除外しない（定期登板を許可）
-      if (state.favoriteRecipeIds.includes(r.id)) return true;
-      // 履歴に含まれているものは除外
-      return !state.historyRecipeIds.includes(r.id);
-    });
-    // 候補が7品以上残っていれば除外後のリストを採用、足りなければ全体から抽選
-    return unrecent.length >= 7 ? unrecent : list;
-  };
-
+  // Saved dated weeks, rather than discarded generations, define recent mains.
+  const recentMains = getRecentCalendarMains();
+  const filterByHistory = list => list;
   // レトルト主菜と自炊時短主菜のカテゴリ別重複防止プール
   const isRetort = r => r && r.tags && r.tags.includes('レトルト活用');
   const isQuick = r => {
@@ -627,25 +620,23 @@ function generateRandomWeeklyPlan(showNotify = true) {
   const isRegular = r => !isRetort(r);
 
   const filterSubPoolByHistory = (list, minCount = 1) => {
-    const unrecent = list.filter(r => {
-      if (state.favoriteRecipeIds.includes(r.id)) return true;
-      return !state.historyRecipeIds.includes(r.id);
-    });
-    return unrecent.length >= minCount ? unrecent : list;
+    const fresh=list.filter(r=>!recentMains.has(r.id)||state.favoriteRecipeIds.includes(r.id));
+    return fresh.length>=minCount ? fresh : list;
   };
-
   const poolRetortMains = filterSubPoolByHistory(availableMains.filter(isRetort), 1);
   const poolQuickMains = filterSubPoolByHistory(availableMains.filter(isQuick), 1);
   const poolRegularMains = filterSubPoolByHistory(availableMains.filter(isRegular), 5);
 
-  let poolMains = filterByHistory(availableMains);
+  let poolMains = filterSubPoolByHistory(availableMains,7);
   let poolSides = filterByHistory(availableSides);
   let poolSoups = filterByHistory(availableSoups);
 
   const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 
-  let bestPlan = null;
-  let minCostDiff = Infinity;
+  const preferredLowCost=buildLowCostPlan([poolMains,poolSides,poolSoups]);
+  let bestPlan = calculatePlanTotalCost(preferredLowCost)<=state.targetBudget ? preferredLowCost : lowCostPlan;
+  let bestRepeatScore = calendarPlanRepeatScore(bestPlan,recentMains);
+  let minCostDiff = state.targetBudget-calculatePlanTotalCost(bestPlan);
 
   for (let trial = 0; trial < 100; trial++) {
     // 週ぎめごはん黄金バランス:
@@ -729,10 +720,12 @@ function generateRandomWeeklyPlan(showNotify = true) {
     const cost = calculatePlanTotalCost(planCandidate);
     const diff = state.targetBudget - cost;
 
-    if (cost <= state.targetBudget && diff < minCostDiff) {
+    const repeatScore=calendarPlanRepeatScore(planCandidate,recentMains);
+    if (cost <= state.targetBudget && (repeatScore<bestRepeatScore || (repeatScore===bestRepeatScore && diff < minCostDiff))) {
+      bestRepeatScore=repeatScore;
       minCostDiff = diff;
       bestPlan = planCandidate;
-      if (diff <= 100) break;
+      if (repeatScore===0 && diff <= 100) break;
     }
   }
 
@@ -741,21 +734,6 @@ function generateRandomWeeklyPlan(showNotify = true) {
   state.cookedDays=[];
   saveCookedDays();
   clearPlanGenerationError();
-  // 4. 生成したプランのレシピを直近履歴に追加（最大90件＝30日分保持）
-  if (bestPlan) {
-    const newUsedIds = [];
-    Object.values(bestPlan).forEach(day => {
-      if (day.main) newUsedIds.push(day.main);
-      if (day.side) newUsedIds.push(day.side);
-      if (day.soup) newUsedIds.push(day.soup);
-    });
-
-    // 既存の履歴の先頭に追加し、重複を除いて最大90件（30日分×3品）を保持
-    const updatedHistory = [...newUsedIds, ...state.historyRecipeIds.filter(id => !newUsedIds.includes(id))];
-    state.historyRecipeIds = updatedHistory.slice(0, 90);
-    saveHistory();
-  }
-
   state.weeklyPlan = bestPlan;
   savePlan();
   state.checkedItems = {};
@@ -778,10 +756,12 @@ function generateRandomWeeklyPlan(showNotify = true) {
 }
 
 function savePlan() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_PLAN, JSON.stringify(state.weeklyPlan));
 }
 
 function saveServings() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_SERVINGS, state.servings.toString());
   if (state.familySyncCode && !state.isJoiningFromUrl && !state.isApplyingRemote) {
     pushSyncDataDebounced();
@@ -789,6 +769,7 @@ function saveServings() {
 }
 
 function saveBudget() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_BUDGET, state.targetBudget.toString());
   if (state.familySyncCode && !state.isJoiningFromUrl && !state.isApplyingRemote) {
     pushSyncDataDebounced();
@@ -796,10 +777,12 @@ function saveBudget() {
 }
 
 function saveChecked() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_CHECKED, JSON.stringify(state.checkedItems));
 }
 
 function saveShoppingDays() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_SHOPPING_DAYS, JSON.stringify(state.shoppingDays));
 }
 
@@ -816,6 +799,7 @@ function saveHideSeasonings() {
 }
 
 function saveCustomShoppingItems() {
+  persistCalendarWeeks();
   localStorage.setItem(STORAGE_KEY_CUSTOM_SHOPPING, JSON.stringify(state.customShoppingItems));
   if (state.familySyncCode && !state.isJoiningFromUrl && !state.isApplyingRemote) {
     pushSyncDataDebounced();
@@ -1381,6 +1365,7 @@ function updatePrintView() {
   } else {
     renderPrintWeeklyCalendar(container);
   }
+  const range=document.createElement('p');range.textContent=calendarWeekRange();range.style.cssText='font-weight:bold;font-size:12px';container.prepend(range);
 }
 
 function renderPrintWeeklyCalendar(container) {
@@ -1794,7 +1779,8 @@ function decodeSharePayload(encoded) {
 
 function getFamilyShareUrl(code) {
   const base = 'https://setsuyaku-recipe.github.io/';
-  const snapshot = { w: state.weeklyPlan, s: state.servings, b: state.targetBudget,
+  const calendar = calendarSyncFields();
+  const snapshot = { ws:calendar.weekStart, weeks:calendar.weeks, cd:state.cookedDays, w: state.weeklyPlan, s: state.servings, b: state.targetBudget,
     k: state.childrenCount, p: state.childrenPreferences, ck: state.checkedItems,
     sd: state.shoppingDays, cs: state.customShoppingItems, cr: state.customRecipes, t: Date.now() };
   const encoded = encodeSharePayload(snapshot);
@@ -1848,6 +1834,7 @@ function updateLastUpdatedDisplay(timestamp) {
 // 同期用フルペイロード
 function getSyncPayload() {
   return {
+    ...calendarSyncFields(),
     updatedAt: Date.now(),
     servings: state.servings,
     targetBudget: state.targetBudget,
@@ -1929,7 +1916,10 @@ function pushSyncDataDebounced() {
 function applyRemoteData(data, isSilent = false) {
   if (!data) return;
   if (data.updatedAt && state.lastSyncTime && data.updatedAt < state.lastSyncTime) return;
+  data = prepareCalendarRemoteData(data);
+  if (!data) return;
   let changed = false;
+  if (Array.isArray(data.cookedDays)) { state.cookedDays=data.cookedDays; saveCookedDays(); changed=true; }
 
   if (Array.isArray(data.customRecipes)) {
     for (const recipe of data.customRecipes) {
@@ -2423,6 +2413,8 @@ function renderActiveTab(force = false) {
 }
 
 function render(force = false) {
+  persistCalendarWeeks();
+  renderCalendarWeekControls();
   renderTabs();
   updateBudgetControls();
   updateSummaryBadge();
@@ -2499,7 +2491,7 @@ function updateSummaryBadge() {
   const status=document.getElementById('weekly-estimate-status');
   if(status){status.hidden=!state.weeklyPlan;status.dataset.overBudget=String(diff>0);status.textContent=`夕食7日分の献立目安 約${weeklyTotalCost.toLocaleString()}円（${diff>0 ? '予算を'+diff.toLocaleString()+'円超過' : '予算内'}）`;}
   const balance = document.getElementById('budget-balance');
-  if (balance) balance.textContent = `${diff > 0 ? '今週の予算超過' : '週予算と献立目安の差額'} ¥${Math.abs(diff).toLocaleString()}`;
+  if (balance) balance.textContent = `${diff > 0 ? '選択した週の予算超過' : '週予算と献立目安の差額'} ¥${Math.abs(diff).toLocaleString()}`;
   const estimate = document.getElementById('budget-estimate');
   if (estimate) estimate.textContent = `予算 ¥${target.toLocaleString()} ／ 献立の予定額 ¥${weeklyTotalCost.toLocaleString()}`;
   const meter = document.getElementById('budget-meter');
@@ -3050,6 +3042,11 @@ window.swapSingleDish = function(dayId, category) {
   if (!pool.length) { showToast('条件に合う別の料理がありません'); return; }
   pool=pool.filter(r=>replacementPlanCost(dayId,category,r.id)<=state.targetBudget);
   if(!pool.length){showToast('苦手食材と週予算の両方に合う別の料理がありません。献立は変更していません');return;}
+  const recent=getRecentCalendarMains();
+  if(category==='main') {
+    const recentFree=pool.filter(r=>!recent.has(r.id)||state.favoriteRecipeIds.includes(r.id));
+    if(recentFree.length)pool=recentFree;
+  }
   const fresh=pool.filter(r=>!history.includes(r.id));
   if(fresh.length)pool=fresh;
   const unique=pool.filter(r=>!used.has(r.id));
@@ -3082,12 +3079,15 @@ window.shuffleDayMenu = function(dayId) {
 
   if(!state.weeklyPlan?.[dayId] || !mains.length || !sides.length || !soups.length){showToast('条件に合う料理が足りないため、この日の献立は変更していません');return;}
   let selected=null;
+  let selectedScore=Infinity;
+  const recent=getRecentCalendarMains();
   const original=state.weeklyPlan[dayId];
   const weekRest=calculatePlanTotalCost(state.weeklyPlan)-['main','side','soup'].reduce((sum,key)=>sum+(getRecipeById(original[key])?.approxCostPerPerson||0)*state.servings,0);
   const fits=day=>weekRest+['main','side','soup'].reduce((sum,key)=>sum+getRecipeById(day[key]).approxCostPerPerson*state.servings,0)<=state.targetBudget;
-  for(let i=0;i<40;i++){
+  for(let i=0;i<200;i++){
     const day={main:mains[Math.floor(Math.random()*mains.length)].id,side:sides[Math.floor(Math.random()*sides.length)].id,soup:soups[Math.floor(Math.random()*soups.length)].id};
-    if(fits(day)){selected=day;break;}
+    const score=calendarPlanRepeatScore({...state.weeklyPlan,[dayId]:day},recent);
+    if(fits(day)&&score<selectedScore){selected=day;selectedScore=score;if(score===0)break;}
   }
   if(!selected){
     const cheapest=pool=>pool.reduce((best,r)=>r.approxCostPerPerson<best.approxCostPerPerson?r:best);
@@ -3120,14 +3120,7 @@ window.toggleCookedDay = function(dayId) {
   } else {
     state.cookedDays.push(dayId);
 
-    // その曜日のメニューを直近重複防止履歴（最大90件）に追加
-    const dayData = state.weeklyPlan[dayId];
-    const newRecipeIds = [dayData.main, dayData.side, dayData.soup].filter(Boolean);
-    const updatedHistory = [...newRecipeIds, ...state.historyRecipeIds.filter(id => !newRecipeIds.includes(id))];
-    state.historyRecipeIds = updatedHistory.slice(0, 90);
-    saveHistory();
-
-    showToast(`「${dayName}」のメニューを調理済みに記録しました！👏（重複防止履歴を更新）`);
+    showToast(`「${dayName}」のメニューを調理済みに記録しました！👏`);
   }
 
   saveCookedDays();
@@ -3685,7 +3678,7 @@ function generateShoppingListText() {
 
   const customItems = Array.isArray(state.customShoppingItems) ? state.customShoppingItems.filter(it => !it.isChecked) : [];
   const weeklyCost = state.weeklyPlan ? calculatePlanTotalCost(state.weeklyPlan) : 0;
-  let text = `【🛒 今週の買い物リスト（${state.servings}人分・目安 ¥${weeklyCost.toLocaleString()}）】\n`;
+  let text = `【🛒 ${calendarWeekRange()}の買い物リスト（${state.servings}人分・目安 ¥${weeklyCost.toLocaleString()}）】\n`;
 
   let totalUnchecked = 0;
 
@@ -3711,7 +3704,7 @@ function generateShoppingListText() {
   });
 
   if (totalUnchecked === 0) {
-    return `【🛒 今週の買い物リスト（${state.servings}人分）】\nすべての食材・メモを購入済みです！🎉`;
+    return `【🛒 ${calendarWeekRange()}の買い物リスト（${state.servings}人分）】\nすべての食材・メモを購入済みです！🎉`;
   }
 
   if (state.hideSeasonings && hiddenCount > 0) {
@@ -5084,9 +5077,9 @@ function updateHomeBudget() {
   const day = DAYS_OF_WEEK[getTodayMealIndex()];
   const recipe = getRecipeById(state.weeklyPlan?.[day.id]?.main);
   action.textContent = recipe ? '献立を見る ›' : '献立を作る ›';
-  label.textContent = recipe ? '今日の主菜' : '家族に合わせて';
+  label.textContent = recipe ? (activeWeekStart===mondayKey() ? '今日の主菜' : calendarWeekLabel()+'の主菜') : '家族に合わせて';
   setHomeMealTitle(title, recipe ? getCleanTitle(recipe) : '予算と人数から、１週間分をまとめて');
-  dayText.textContent = recipe ? day.name : '苦手な食材も設定できます';
+  dayText.textContent = recipe ? calendarWeekRange()+'・'+day.name : '苦手な食材も設定できます';
 }
 window.openTodayMealScreen = function() {
   state.activeSwipeDayIndex = getTodayMealIndex();
@@ -5108,7 +5101,7 @@ function syncAppScreen() {
   document.body.dataset.screen = screen;
   document.getElementById('ud-home').hidden = screen !== 'home';
   document.getElementById('ud-workspace').hidden = screen === 'home';
-  const titles = {weekly:'今週の献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
+  const titles = {weekly:calendarWeekLabel()+'の献立',shopping:'買い物リスト',recipes:'レシピ',setup:'献立の設定',dislikes:'苦手食材',sharing:'家族共有',settings:'設定'};
   document.getElementById('ud-page-title').textContent = titles[screen] || '';
   document.getElementById('ud-setup').hidden = screen !== 'setup';
   document.getElementById('ud-settings').hidden = screen !== 'settings';
@@ -5212,6 +5205,7 @@ function setupUniversalNavigation() {
 
 // Recheck the day when a home-screen app returns after midnight.
  document.addEventListener('visibilitychange', () => {if(document.visibilityState === 'visible' && state.activeTab === 'home') updateHomeBudget();});
+
 
 
 

@@ -1,6 +1,6 @@
 // Service Worker for 週ぎめごはん (PWA)
 // 更新時に旧画面が残らないことを最優先したキャッシュ戦略
-const CACHE_VERSION = '20261029_budget_safety';
+const CACHE_VERSION = '20261029_calendar_weeks';
 const CACHE_PREFIX = 'setsuyaku-recipe-';
 const CACHE_NAME = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -11,6 +11,7 @@ const PRECACHE_ASSETS = [
   './privacy.html',
   './recipes.js',
   './app.js',
+  './week-management.js',
   './manifest.json',
   './apple-touch-icon.png',
   './ogp.png',
@@ -93,6 +94,7 @@ function isCoreAppRequest(url, request) {
     path.endsWith('/') ||
     path.endsWith('/index.html') ||
     path.endsWith('/app.js') ||
+    path.endsWith('/week-management.js') ||
     path.endsWith('/recipes.js') ||
     path.endsWith('/manifest.json') ||
     path.endsWith('/sw.js')
@@ -147,6 +149,7 @@ self.addEventListener('fetch', event => {
     return response;
   })());
 });
+
 
 
 

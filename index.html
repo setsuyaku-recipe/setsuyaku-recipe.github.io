@@ -1069,6 +1069,37 @@ body[data-screen="weekly"] .reading-day-header h2{font-size:18px!important}
 body[data-screen="weekly"] .reading-day-options{font-size:12px}
 body[data-screen="weekly"] .reading-day-options>summary{min-height:44px;padding:10px 0}
 @media(max-width:360px){body[data-screen="weekly"] .ud-title-row #ud-page-title{font-size:19px!important}body[data-screen="weekly"] .weekly-display-switch button{font-size:11px!important;padding:6px!important}}
+
+/* Unified meal design: consistent rhythm, typography and controls. */
+body[data-screen="weekly"]{--meal-green:#326f56;--meal-ink:#303b33;--meal-muted:#687267;--meal-line:#d9dfd3;--meal-soft:#edf2e8}
+body[data-screen="weekly"] .ud-workspace{padding:8px 14px 0!important}
+body[data-screen="weekly"] .ud-home-back{color:var(--meal-green);font-weight:600;gap:6px}
+body[data-screen="weekly"] .meal-planning-header{padding:6px 0 8px;border-bottom:1px solid var(--meal-line);margin-bottom:8px}
+body[data-screen="weekly"] .ud-title-row{align-items:center;margin:0!important;gap:12px}
+body[data-screen="weekly"] .ud-title-row #ud-page-title{font-size:22px!important;font-weight:800!important;color:var(--meal-ink);letter-spacing:0}
+body[data-screen="weekly"] .weekly-display-switch{background:var(--meal-soft)!important;border:0!important;border-radius:10px;padding:3px;gap:0}
+body[data-screen="weekly"] .weekly-display-switch button{border:0!important;border-radius:8px!important;box-shadow:none!important;min-height:40px!important;font-weight:600!important;color:var(--meal-muted)!important}
+body[data-screen="weekly"] .weekly-display-switch button[aria-pressed="true"]{background:var(--meal-green)!important;color:#fff!important;box-shadow:none!important}
+body[data-screen="weekly"] .meal-week-disclosure{margin:4px 0 0}
+body[data-screen="weekly"] .meal-week-disclosure>summary{font-size:13px;min-height:40px;color:var(--meal-muted);gap:0}
+body[data-screen="weekly"] .meal-week-disclosure[open]{padding-bottom:4px}
+body[data-screen="weekly"] .meal-week-disclosure button,body[data-screen="weekly"] .meal-week-disclosure select{border-radius:10px!important;border-color:var(--meal-line)!important;box-shadow:none!important;font-size:13px!important}
+body[data-screen="weekly"] .meal-week-disclosure button[aria-pressed="true"]{background:var(--meal-green)!important;color:white!important}
+body[data-screen="weekly"] .ud-meal-context{border:0!important;padding:0!important;min-height:36px!important}
+body[data-screen="weekly"] .ud-meal-context .weekly-estimate-status{color:var(--meal-muted);font-size:13px!important;font-weight:500}
+body[data-screen="weekly"] .ud-meal-context .weekly-estimate-status[data-over-budget="true"]{color:#78451f}
+body[data-screen="weekly"] .ud-meal-context button{color:var(--meal-green)!important;font-size:13px!important;min-height:40px!important;font-weight:600}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"]{background:var(--meal-soft)!important;border:1px solid transparent!important;outline:none!important;border-radius:10px!important;box-shadow:none!important;color:#4a594b!important;font-weight:600!important}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"][data-selected="true"]{background:var(--meal-green)!important;border-color:var(--meal-green)!important;color:white!important}
+body[data-screen="weekly"] #weekly-plan-container [id^="swipe-day-tab-"] span:first-child{font-size:17px!important;font-weight:700}
+body[data-screen="weekly"] .reading-day-header{background:transparent!important;border:0!important;border-bottom:1px solid var(--meal-line)!important;border-radius:0!important;margin:8px 0 10px!important;padding:0 0 4px!important;min-height:44px;color:var(--meal-ink)!important}
+body[data-screen="weekly"] .reading-day-header h2{color:var(--meal-ink)!important;font-weight:800!important}
+body[data-screen="weekly"] .meal-day-cost{font-size:13px;color:var(--meal-muted)!important;font-weight:500}
+body[data-screen="weekly"] .reading-day-options{color:var(--meal-green)!important;font-size:12px}
+body[data-screen="weekly"] .weekly-overview .reading-day-header{margin:0 0 10px!important}
+body[data-screen="weekly"] .weekly-overview .reading-day-options,body[data-screen="weekly"] .weekly-overview .meal-day-cost{color:var(--meal-muted)!important}
+body[data-screen="weekly"] :is(.meal-card-actions button,.meal-week-disclosure summary,.reading-day-options summary):focus-visible{outline:3px solid var(--meal-green);outline-offset:3px}
+@media(max-width:360px){body[data-screen="weekly"] .ud-title-row #ud-page-title{font-size:19px!important}body[data-screen="weekly"] .ud-title-row{gap:6px}}
 </style>
 </head>
 <body data-screen="home" class="text-slate-800 min-h-screen flex flex-col antialiased selection:bg-sky-200 selection:text-sky-900">
@@ -1095,8 +1126,8 @@ body[data-screen="weekly"] .reading-day-options>summary{min-height:44px;padding:
   <header id="ud-workspace" class="ud-workspace" hidden>
     <button type="button" class="ud-home-back" onclick="returnAppHome()"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 11 12 2l10 9h-3v11h-5v-7h-4v7H5V11Z" fill="currentColor"/></svg><span>ホーム</span></button>
     
-    <div class="ud-title-row"><h1 id="ud-page-title" tabindex="-1">今週の献立</h1><div id="weekly-display-switch" class="weekly-display-switch" role="group" aria-label="献立の表示方法" hidden><button type="button" id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')" aria-pressed="true" aria-controls="weekly-plan-container">1日ずつ</button><button type="button" id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')" aria-pressed="false" aria-controls="weekly-plan-container">7日まとめて</button></div></div>
-    <div data-calendar-week-controls></div><div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition" hidden></span><p id="weekly-estimate-status" class="weekly-estimate-status" role="status" hidden></p><button type="button" onclick="openMealSetup()">人数・予算</button></div>
+    <div class="meal-planning-header"><div class="ud-title-row"><h1 id="ud-page-title" tabindex="-1">今週の献立</h1><div id="weekly-display-switch" class="weekly-display-switch" role="group" aria-label="献立の表示方法" hidden><button type="button" id="btn-weekly-view-swipe" onclick="setWeeklyViewMode('swipe')" aria-pressed="true" aria-controls="weekly-plan-container">1日ずつ</button><button type="button" id="btn-weekly-view-all" onclick="setWeeklyViewMode('all')" aria-pressed="false" aria-controls="weekly-plan-container">7日まとめて</button></div></div>
+    <div data-calendar-week-controls></div><div id="ud-meal-context" class="ud-meal-context" hidden><span id="ud-condition" hidden></span><p id="weekly-estimate-status" class="weekly-estimate-status" role="status" hidden></p><button type="button" onclick="openMealSetup()">人数・予算</button></div></div>
   </header>
 
   <!-- ==================== シンプルヘッダー ==================== -->
@@ -1895,9 +1926,9 @@ body[data-screen="weekly"] .reading-day-options>summary{min-height:44px;padding:
   </div>
 
   <!-- スクリプト読み込み（スマホのキャッシュ対策クエリ付き） -->
-  <script src="recipes.js?v=20261029_meal_first"></script>
-  <script src="week-management.js?v=20261029_meal_first"></script>
-  <script src="app.js?v=20261029_meal_first"></script>
+  <script src="recipes.js?v=20261029_meal_unified"></script>
+  <script src="week-management.js?v=20261029_meal_unified"></script>
+  <script src="app.js?v=20261029_meal_unified"></script>
 
   <div id="app-update-notice" role="status" hidden style="position:fixed;bottom:16px;left:16px;right:16px;z-index:100;background:#fffdf5;border:1px solid #326f56;padding:12px;border-radius:12px;box-shadow:0 3px 15px #0002;font-size:14px">新しい版を利用できます。<button type="button" id="app-update-apply" style="min-height:44px;padding:8px 14px;color:#245746;text-decoration:underline">更新する</button><button type="button" onclick="this.parentElement.hidden=true" style="min-height:44px;padding:8px">あとで</button></div>
   <script>
@@ -1907,7 +1938,7 @@ body[data-screen="weekly"] .reading-day-options>summary{min-height:44px;padding:
         if (requestedUpdate) window.location.reload();
       });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261029_meal_first', {updateViaCache:'none'}).then(reg => {
+        navigator.serviceWorker.register('./sw.js?v=20261029_meal_unified', {updateViaCache:'none'}).then(reg => {
           const offer = () => {
             if (!reg.waiting) return;
             document.getElementById('app-update-notice').hidden = false;

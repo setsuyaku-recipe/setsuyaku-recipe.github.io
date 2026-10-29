@@ -36,3 +36,19 @@ assert.equal(run(`mondayKey(new Date(2027,0,1))`),'2026-12-28');
 assert.equal(run(`shiftWeek('2026-12-28',1)`),'2027-01-04');
 assert.equal(run(`validWeekKey('2026-02-30')`),false);
 console.log('PASS migration, isolated weeks, restart, budget failure rollback, dated sync, year boundary');
+
+// Date window includes -4, excludes -5, the selected week, and future weeks.
+run(`calendarWeeks={};activeWeekStart='2026-10-26';
+for(const [offset,id] of [[-5,'too-old'],[-4,'boundary'],[-1,'recent'],[0,'discarded'],[1,'future']]) calendarWeeks[shiftWeek(activeWeekStart,offset)]={weeklyPlan:{mon:{main:id,side:'side',soup:'soup'}}};`);
+assert.deepEqual(JSON.parse(run('JSON.stringify([...getRecentCalendarMains()].sort())')),['boundary','recent']);
+run(`state.favoriteRecipeIds=['recent'];`);
+assert.equal(run(`calendarPlanRepeatScore({mon:{main:'recent',side:'s1',soup:'p1'}})`),0);
+assert.equal(run(`calendarPlanRepeatScore({mon:{main:'boundary',side:'s1',soup:'p1'}})`),1);
+assert.equal(run(`calendarPlanRepeatScore({mon:{main:'x',side:'same',soup:'p1'},tue:{main:'y',side:'same',soup:'p2'}})`),100);
+// Full generation derives history from saved weeks and does not append discarded candidates.
+run(`calendarWeeks={};state.historyRecipeIds=['legacy-only'];state.targetBudget=10000;state.servings=5;generateRandomWeeklyPlan(false);persistCalendarWeeks();globalThis.priorMains=Object.values(state.weeklyPlan).map(d=>d.main);window.selectCalendarWeek(shiftWeek(activeWeekStart,1));`);
+assert.equal(run('JSON.stringify(state.historyRecipeIds)'), '["legacy-only"]');
+assert.equal(run('Object.values(state.weeklyPlan).filter(d=>priorMains.includes(d.main)).length'),0);
+assert.equal(run('new Set(Object.values(state.weeklyPlan).map(d=>d.side)).size'),7);
+assert.equal(run('new Set(Object.values(state.weeklyPlan).map(d=>d.soup)).size'),7);
+console.log('PASS saved-week history, four-week window, favorites, within-week variety, discarded generation');

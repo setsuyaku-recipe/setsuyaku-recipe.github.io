@@ -86,6 +86,7 @@ window.selectCalendarWeek = function(key) {
     }
   }
   mealSwapUndo=null;
+  mealSwapHistory.clear();
   state.activeSwipeDayIndex=0; state.activeRecipeSwipeDayIndex=0;
   saveWeekLegacyMirror(); persistCalendarWeeks(); clearPlanGenerationError(); render(true);
 };
@@ -129,4 +130,29 @@ function prepareCalendarRemoteData(data) {
   // Preserve this device's selected week while updating the corresponding dated records.
   const local=calendarWeeks[activeWeekStart];
   return {...data,...copyWeekData(local)};
+}
+
+// Relative to the week being prepared, exclude only the four preceding saved weeks.
+function getRecentCalendarMains() {
+  const recent=new Set();
+  if (!calendarWeeksReady) return recent;
+  const first=shiftWeek(activeWeekStart,-4);
+  for (const [key,record] of Object.entries(calendarWeeks)) {
+    if (key<first || key>=activeWeekStart) continue;
+    for (const day of Object.values(record.weeklyPlan||{})) if(day.main)recent.add(day.main);
+  }
+  return recent;
+}
+function calendarPlanRepeatScore(plan,recent=getRecentCalendarMains()) {
+  let score=0;
+  for(const category of ['main','side','soup']) {
+    const seen=new Set();
+    for(const day of Object.values(plan||{})) {
+      const id=day[category];
+      if(seen.has(id))score+=100;
+      seen.add(id);
+      if(category==='main' && recent.has(id) && !state.favoriteRecipeIds.includes(id))score++;
+    }
+  }
+  return score;
 }

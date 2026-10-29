@@ -462,7 +462,7 @@ function updateNgBadge() {
 function getRecipePreferenceConflicts(recipe) {
   if (!recipe) return [];
   const children = [];
-  for (let i=1;i<=state.childrenCount;i++) {
+  for (let i=1;i<=Math.min(state.childrenCount,state.servings);i++) {
     const pref=state.childrenPreferences['child'+i] || {dislikes:[],disabledFlavors:[]};
     if (!canChildEat(recipe,pref)) children.push(i);
   }
@@ -540,6 +540,31 @@ function canChildEat(recipe, childPref) {
   return !hasDislikedIngredient;
 }
 
+// One shared serving allocation for shopping quantities, estimates and recipe details.
+function getRecipeServingAllocation(recipe) {
+  if (!recipe) return [];
+  const total = Math.max(0, Number(state.servings) || 0);
+  const alternatives = getChildMenuResolution(recipe).alternatives.slice(0,total);
+  const portions = new Map();
+  const baseServings = total - alternatives.length;
+  if (baseServings) portions.set(recipe.id,{recipe,servings:baseServings});
+  for (const {alt} of alternatives) {
+    if (!portions.has(alt.id)) portions.set(alt.id,{recipe:alt,servings:0});
+    portions.get(alt.id).servings++;
+  }
+  return [...portions.values()];
+}
+function calculateRecipeFamilyCost(recipe) {
+  return getRecipeServingAllocation(recipe).reduce((sum,part)=>
+    sum+(Number(part.recipe.approxCostPerPerson)||0)*part.servings,0);
+}
+function calculateDayFamilyCost(day) {
+  return ['main','side','soup'].reduce((sum,key)=>sum+calculateRecipeFamilyCost(getRecipeById(day?.[key])),0);
+}
+function recipePortionsForMeal(recipe, original) {
+  return getRecipeServingAllocation(original).find(part=>part.recipe.id===recipe.id)?.servings || 0;
+}
+
 // 献立プランの総コストを計算（filterDaysが指定された場合は対象曜日のみ合算）
 function calculatePlanTotalCost(plan, filterDays = null) {
   let cost = 0;
@@ -551,9 +576,9 @@ function calculatePlanTotalCost(plan, filterDays = null) {
     const main = getRecipeById(day.main);
     const side = getRecipeById(day.side);
     const soup = getRecipeById(day.soup);
-    if (main) cost += main.approxCostPerPerson * state.servings;
-    if (side) cost += side.approxCostPerPerson * state.servings;
-    if (soup) cost += soup.approxCostPerPerson * state.servings;
+    if (main) cost += calculateRecipeFamilyCost(main);
+    if (side) cost += calculateRecipeFamilyCost(side);
+    if (soup) cost += calculateRecipeFamilyCost(soup);
   });
   return cost;
 }
@@ -589,7 +614,7 @@ function replacementPlanCost(dayId,category,newRecipeId) {
   const old=getRecipeById(state.weeklyPlan[dayId][category]);
   const next=getRecipeById(newRecipeId);
   if(!next)return Infinity;
-  return calculatePlanTotalCost(state.weeklyPlan)+((Number(next.approxCostPerPerson)||0)-(Number(old?.approxCostPerPerson)||0))*state.servings;
+  return calculatePlanTotalCost(state.weeklyPlan)+calculateRecipeFamilyCost(next)-calculateRecipeFamilyCost(old);
 }
 
 function generateRandomWeeklyPlan(showNotify = true) {
@@ -1396,9 +1421,7 @@ function renderPrintWeeklyCalendar(container) {
     const soupRecipe = getRecipeById(dayData.soup);
     const theme = DAY_THEMES[day.id] || { name: day.name };
     const proteinText = mainRecipe && mainRecipe.proteinType ? (PROTEIN_ICONS[mainRecipe.proteinType] || '') : '';
-    const dayCost = ((mainRecipe ? mainRecipe.approxCostPerPerson : 0) +
-                     (sideRecipe ? sideRecipe.approxCostPerPerson : 0) +
-                     (soupRecipe ? soupRecipe.approxCostPerPerson : 0)) * state.servings;
+    const dayCost = [mainRecipe,sideRecipe,soupRecipe].reduce((sum,r)=>sum+calculateRecipeFamilyCost(r),0);
 
     return {
       id: day.id,
@@ -2802,9 +2825,7 @@ function renderWeeklyPlan() {
       const dayBg = isCooked ? 'bg-emerald-100/90 text-emerald-950 border-emerald-300' : theme.bg;
       const isChecked = state.shoppingDays.includes(day.id);
 
-      const dayCost = (mainRecipe ? mainRecipe.approxCostPerPerson : 0) +
-                      (sideRecipe ? sideRecipe.approxCostPerPerson : 0) +
-                      (soupRecipe ? soupRecipe.approxCostPerPerson : 0);
+      const dayCost = [mainRecipe,sideRecipe,soupRecipe].reduce((sum,r)=>sum+calculateRecipeFamilyCost(r),0);
 
       // 主菜食材バナー（肉・魚・豆腐が一目でわかる！）
       const proteinInfo = getProteinInfo(mainRecipe);
@@ -2822,8 +2843,8 @@ function renderWeeklyPlan() {
           isCooked ? 'border-emerald-300 ring-2 ring-emerald-200' : 'border-sky-100/90 hover:border-sky-200'
         } ${isSwipeMode ? 'shrink-0 w-full max-w-md mx-auto' : ''}">
           <div class="reading-day-header"><h2 id="meal-day-heading-${day.id}">${day.name.replace(/^[^月火水木金土日]*([月火水木金土日]曜日).*$/, '$1')}</h2>
-            <span class="meal-day-cost">${state.servings}人分 約${(dayCost * state.servings).toLocaleString()}円</span><details class="reading-day-options"><summary>この日の設定</summary><div>
-              <span>${state.servings}人分 約¥${dayCost * state.servings}</span>
+            <span class="meal-day-cost">${state.servings}人分 約${(dayCost).toLocaleString()}円</span><details class="reading-day-options"><summary>この日の設定</summary><div>
+              <span>${state.servings}人分 約¥${dayCost}</span>
               <label><input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleShoppingDay('${day.id}')">買い物リストに入れる</label>
               <button type="button" onclick="toggleCookedDay('${day.id}')">${isCooked ? '調理済みを解除' : '作ったことを記録'}</button>
               <button type="button" onclick="shuffleDayMenu('${day.id}')">この日の献立を変更</button>
@@ -2987,8 +3008,8 @@ function renderDishRow(dayId, category, recipe, label) {
     altHtml = altMenus.map(m => `
       <div class="mt-1.5 pl-2 border-l-2 border-amber-400 flex items-center justify-between bg-amber-50/90 rounded-r-lg p-1.5 min-w-0">
         <div class="flex items-center gap-1.5 min-w-0 flex-1">
-          <span class="text-[10px] font-black text-amber-900 bg-amber-200/90 px-1.5 py-0.2 rounded shrink-0">別メニュー (${m.label})</span>
-          <span class="text-xs font-bold text-amber-950 cursor-pointer hover:underline truncate" onclick="openDetailModal('${m.alt.id}')">${getCleanTitle(m.alt)}</span>
+          <span class="text-[10px] font-black text-amber-900 bg-amber-200/90 px-1.5 py-0.2 rounded shrink-0">別メニュー (${m.label}・1人分)</span>
+          <span class="text-xs font-bold text-amber-950 cursor-pointer hover:underline truncate" onclick="openDetailModal('${m.alt.id}',${recipePortionsForMeal(m.alt,recipe)})">${getCleanTitle(m.alt)}</span>
         </div>
       </div>
     `).join('');
@@ -3004,9 +3025,9 @@ function renderDishRow(dayId, category, recipe, label) {
   const parts = known[cleanTitle] || ['', reading.rawTitle, ''];
   return `<article class="weekly-dish weekly-dish-${category} meal-card" aria-label="${label}">
     <div class="meal-card-band"><span aria-hidden="true">${category === 'main' ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3v6q0 3 3 3t3-3V3M7 3v18M19 3q-5 4-4 10h4V3v18"/></svg>' : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18q0 11-9 11T3 7ZM8 18v3h8v-3"/></svg>'}</span><span>${label}</span><span class="meal-band-rule"></span></div>
-    <div class="meal-card-body">${conflictHtml}<h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}')">${renderMealTitle(parts[1])}</button></h3>
-    ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}</div>
-    <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}')">作り方 <span aria-hidden="true">›</span></button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更"><span aria-hidden="true">⇄</span> この１品を変更</button></div>
+    <div class="meal-card-body">${conflictHtml}<h3>${parts[0] ? `<span class="meal-title-prefix">${parts[0]}</span>` : ''}<button type="button" class="meal-title" onclick="openDetailModal('${recipe.id}',${recipePortionsForMeal(recipe,recipe)})">${renderMealTitle(parts[1])}</button></h3>
+    ${parts[2] ? `<p class="meal-description">${parts[2]}</p>` : ''}${altHtml}${altMenus.length ? '<p class="text-xs mt-2">元の料理 '+recipePortionsForMeal(recipe,recipe)+'人分＋別メニュー '+altMenus.length+'人分（材料・費用に反映済み）</p>' : ''}</div>
+    <div class="meal-card-actions"><button type="button" onclick="openDetailModal('${recipe.id}',${recipePortionsForMeal(recipe,recipe)})">作り方 <span aria-hidden="true">›</span></button><button type="button" onclick="swapSingleDish('${dayId}','${category}')" aria-label="${label}、${reading.title}を別の料理に変更"><span aria-hidden="true">⇄</span> この１品を変更</button></div>
 
   </article>`;
 }
@@ -3082,8 +3103,8 @@ window.shuffleDayMenu = function(dayId) {
   let selectedScore=Infinity;
   const recent=getRecentCalendarMains();
   const original=state.weeklyPlan[dayId];
-  const weekRest=calculatePlanTotalCost(state.weeklyPlan)-['main','side','soup'].reduce((sum,key)=>sum+(getRecipeById(original[key])?.approxCostPerPerson||0)*state.servings,0);
-  const fits=day=>weekRest+['main','side','soup'].reduce((sum,key)=>sum+getRecipeById(day[key]).approxCostPerPerson*state.servings,0)<=state.targetBudget;
+  const weekRest=calculatePlanTotalCost(state.weeklyPlan)-calculateDayFamilyCost(original);
+  const fits=day=>weekRest+calculateDayFamilyCost(day)<=state.targetBudget;
   for(let i=0;i<200;i++){
     const day={main:mains[Math.floor(Math.random()*mains.length)].id,side:sides[Math.floor(Math.random()*sides.length)].id,soup:soups[Math.floor(Math.random()*soups.length)].id};
     const score=calendarPlanRepeatScore({...state.weeklyPlan,[dayId]:day},recent);
@@ -3190,7 +3211,7 @@ window.toggleBlacklist = function(recipeId, event) {
 
   // 詳細モーダルが開いていれば更新
   if (state.detailRecipe && state.detailRecipe.id === recipeId) {
-    openDetailModal(recipeId);
+    openDetailModal(recipeId,state.detailServings ?? state.servings);
   }
 };
 
@@ -3235,12 +3256,10 @@ function calculateAggregatedShoppingList() {
     if (!state.shoppingDays.includes(day.id)) return;
     const data = state.weeklyPlan[day.id];
     if (!data) return;
-    [data.main,data.side,data.soup].forEach(id => {
-      const recipe = getRecipeById(id);
-      if (!recipe) return;
+    [data.main,data.side,data.soup].flatMap(id => getRecipeServingAllocation(getRecipeById(id))).forEach(({recipe,servings}) => {
       (recipe.ingredients || []).forEach(ing => {
         const name = canonicalShoppingName(ing.name);
-        const m = normalizeShoppingMeasure(ing.amount * state.servings, ing.unit);
+        const m = normalizeShoppingMeasure(ing.amount * servings, ing.unit);
         if (!name || !Number.isFinite(m.amount) || m.amount <= 0) return;
         const key = name + '__all';
         if (!result[key]) result[key] = {name,amount:0,unit:m.unit,aisle:ing.aisle || '調味料・その他',measures:{},sourceKeys:[]};
@@ -4119,9 +4138,7 @@ function renderRecipeBook() {
       const cleanSideTitle = sideRecipe ? getCleanTitle(sideRecipe) : '未設定';
       const cleanSoupTitle = soupRecipe ? getCleanTitle(soupRecipe) : '未設定';
 
-      const dayCost = (mainRecipe ? mainRecipe.approxCostPerPerson : 0) +
-                      (sideRecipe ? sideRecipe.approxCostPerPerson : 0) +
-                      (soupRecipe ? soupRecipe.approxCostPerPerson : 0);
+      const dayCost = [mainRecipe,sideRecipe,soupRecipe].reduce((sum,r)=>sum+calculateRecipeFamilyCost(r),0);
 
       const theme = RECIPE_DAY_THEMES[day.id] || {
         badge: 'bg-slate-800 text-white',
@@ -4147,7 +4164,7 @@ function renderRecipeBook() {
               </span>
             </div>
             <span class="text-[11px] sm:text-xs font-black text-teal-700 bg-white border border-teal-200/80 px-2 py-0.5 rounded-md shadow-2xs shrink-0">
-              ${state.servings}人分 約¥${dayCost * state.servings}
+              ${state.servings}人分 約¥${dayCost}
             </span>
           </div>
 
@@ -4157,35 +4174,35 @@ function renderRecipeBook() {
 
             <!-- 主菜ボタン -->
             <button type="button" 
-                    onclick="openDetailModal('${mainRecipe ? mainRecipe.id : ''}')"
+                    onclick="openDetailModal('${mainRecipe ? mainRecipe.id : ''}',${recipePortionsForMeal(mainRecipe,mainRecipe)})"
                     class="w-full py-2 px-2.5 rounded-xl bg-white border border-amber-200/90 hover:border-amber-400 hover:bg-amber-50/50 text-left transition-all flex items-center justify-between gap-2 shadow-2xs active:scale-98 cursor-pointer min-w-0 group">
               <div class="flex items-center gap-2 min-w-0 flex-1">
                 <span class="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500 text-white shrink-0">主菜</span>
                 <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-amber-800 truncate">${cleanMainTitle}</span>
               </div>
-              <span class="text-[11px] font-black text-teal-700 shrink-0">¥${(mainRecipe ? mainRecipe.approxCostPerPerson : 0) * state.servings} ➔</span>
+              <span class="text-[11px] font-black text-teal-700 shrink-0">¥${calculateRecipeFamilyCost(mainRecipe)} ➔</span>
             </button>
 
             <!-- 副菜ボタン -->
             <button type="button" 
-                    onclick="openDetailModal('${sideRecipe ? sideRecipe.id : ''}')"
+                    onclick="openDetailModal('${sideRecipe ? sideRecipe.id : ''}',${recipePortionsForMeal(sideRecipe,sideRecipe)})"
                     class="w-full py-2 px-2.5 rounded-xl bg-white border border-lime-200/90 hover:border-lime-400 hover:bg-lime-50/50 text-left transition-all flex items-center justify-between gap-2 shadow-2xs active:scale-98 cursor-pointer min-w-0 group">
               <div class="flex items-center gap-2 min-w-0 flex-1">
                 <span class="text-[10px] font-black px-1.5 py-0.2 rounded bg-lime-600 text-white shrink-0">副菜</span>
                 <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-800 truncate">${cleanSideTitle}</span>
               </div>
-              <span class="text-[11px] font-black text-teal-700 shrink-0">¥${(sideRecipe ? sideRecipe.approxCostPerPerson : 0) * state.servings} ➔</span>
+              <span class="text-[11px] font-black text-teal-700 shrink-0">¥${calculateRecipeFamilyCost(sideRecipe)} ➔</span>
             </button>
 
             <!-- 汁物ボタン -->
             <button type="button" 
-                    onclick="openDetailModal('${soupRecipe ? soupRecipe.id : ''}')"
+                    onclick="openDetailModal('${soupRecipe ? soupRecipe.id : ''}',${recipePortionsForMeal(soupRecipe,soupRecipe)})"
                     class="w-full py-2 px-2.5 rounded-xl bg-white border border-sky-200/90 hover:border-sky-400 hover:bg-sky-50/50 text-left transition-all flex items-center justify-between gap-2 shadow-2xs active:scale-98 cursor-pointer min-w-0 group">
               <div class="flex items-center gap-2 min-w-0 flex-1">
                 <span class="text-[10px] font-black px-1.5 py-0.2 rounded bg-sky-600 text-white shrink-0">汁物</span>
                 <span class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-sky-800 truncate">${cleanSoupTitle}</span>
               </div>
-              <span class="text-[11px] font-black text-teal-700 shrink-0">¥${(soupRecipe ? soupRecipe.approxCostPerPerson : 0) * state.servings} ➔</span>
+              <span class="text-[11px] font-black text-teal-700 shrink-0">¥${calculateRecipeFamilyCost(soupRecipe)} ➔</span>
             </button>
           </div>
         </div>
@@ -4558,7 +4575,8 @@ window.savePreferencesAndGenerate = function() {
   preferenceDraftBackup=null;
   closePreferencesModal();
   const conflicts=getPlanPreferenceConflicts();
-  state.renderedTabs.weekly=false;state.renderedTabs.recipes=false;
+  state.renderedTabs.weekly=false;state.renderedTabs.recipes=false;state.renderedTabs.shopping=false;
+  updateSummaryBadge();
   if(conflicts.length){
     state.activeSwipeDayIndex=DAYS_OF_WEEK.findIndex(d=>d.id===conflicts[0].dayId);
     setAppScreen('weekly');
@@ -4577,16 +4595,18 @@ window.closePreferencesModal = function() {
   modal.classList.remove('flex');
 };
 
-window.openDetailModal = function(recipeId) {
+window.openDetailModal = function(recipeId, requestedServings = state.servings) {
+  const detailServings = Math.max(0,Math.min(state.servings,Number(requestedServings)||0));
   const recipe = getRecipeById(recipeId);
   if (!recipe) return;
 
   state.detailRecipe = recipe;
+  state.detailServings = detailServings;
   const modal = document.getElementById('modal-recipe-detail');
   const content = document.getElementById('modal-detail-content');
 
   const categoryLabels = { main: '主菜', side: '副菜', soup: '汁物' };
-  const cost5p = recipe.approxCostPerPerson * state.servings;
+  const cost5p = recipe.approxCostPerPerson * detailServings;
   const cleanTitle = getCleanTitle(recipe);
   const extBadge = getExternalBadge(recipe);
   const cuisineBadge = recipe.cuisine ? `<span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">${CUISINE_LABELS[recipe.cuisine]}</span>` : '';
@@ -4606,7 +4626,7 @@ window.openDetailModal = function(recipeId) {
         ${proteinBadge}
         <span class="text-xs text-slate-500 font-bold">⏱️ 約${recipe.time}</span>
         <span class="text-xs font-black text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-lg ml-auto shadow-2xs">
-          ${state.servings}人分 約¥${cost5p}
+          ${detailServings}人分 約¥${cost5p}
         </span>
       </div>
 
@@ -4631,13 +4651,13 @@ window.openDetailModal = function(recipeId) {
       <summary class="font-black text-slate-800 text-sm mb-2.5 cursor-pointer">
         <span class="flex items-center gap-1.5">
           <span>🥕</span>
-          <span>材料（${state.servings}人分）</span>
+          <span>材料（${detailServings}人分）</span>
         </span>
         <span class="text-[11px] font-normal text-slate-500">※調味料はお好みで調整</span>
       </summary>
       <div class="grid grid-cols-2 gap-2 text-xs sm:text-sm">
         ${recipe.ingredients.map(ing => {
-          const scaledAmount = ing.amount * state.servings;
+          const scaledAmount = ing.amount * detailServings;
           return `
             <div class="flex items-center justify-between py-1.5 px-2.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
               <span class="text-slate-800 font-bold truncate">${ing.name}</span>
@@ -4722,7 +4742,7 @@ window.toggleFavorite = function(recipeId, event) {
   renderWeeklyPlan();
   renderRecipeBook();
   if (state.detailRecipe && state.detailRecipe.id === recipeId) {
-    openDetailModal(recipeId);
+    openDetailModal(recipeId,state.detailServings ?? state.servings);
   }
 };
 

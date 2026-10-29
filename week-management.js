@@ -95,7 +95,11 @@ function renderCalendarWeekControls() {
   for (const host of document.querySelectorAll('[data-calendar-week-controls]')) {
     host.hidden=!['weekly','recipes'].includes(state.activeTab);
     host.replaceChildren();
-    const range=document.createElement('p'); range.textContent=`${calendarWeekLabel()}：${calendarWeekRange()}`; range.style.fontWeight='800'; host.appendChild(range);
+    const disclosure=document.createElement('details');disclosure.className='meal-week-disclosure';
+    const summary=document.createElement('summary');
+    const first=new Date(activeWeekStart+'T12:00:00');const last=new Date(first);last.setDate(last.getDate()+6);
+    summary.textContent=first.getMonth()+1+'/'+first.getDate()+'〜'+(last.getMonth()+1)+'/'+last.getDate()+'　週を変更';
+    disclosure.appendChild(summary);host.appendChild(disclosure);
     const row=document.createElement('div'); row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:8px';
     for (const [label,key] of [['今週',mondayKey()],['来週',shiftWeek(mondayKey(),1)]]) {
       const button=document.createElement('button');button.type='button';button.textContent=calendarWeeks[key]?.weeklyPlan?label:`${label}を作る`;
@@ -103,12 +107,12 @@ function renderCalendarWeekControls() {
       button.style.cssText=`min-height:44px;padding:8px 16px;border:1px solid #667a5f;border-radius:12px;background:${key===activeWeekStart?'#52644c':'#fff'};color:${key===activeWeekStart?'#fff':'#33442e'}`;row.appendChild(button);
     }
     const savedKeys=Object.keys(calendarWeeks).filter(key=>calendarWeeks[key]?.weeklyPlan).sort().reverse();
-    if (savedKeys.length) {
+    if (savedKeys.some(key=>key!==mondayKey()&&key!==shiftWeek(mondayKey(),1))) {
       const select=document.createElement('select');select.setAttribute('aria-label','保存した週を選ぶ');select.style.cssText='min-height:44px;max-width:100%;padding:8px;border:1px solid #667a5f;border-radius:12px;background:#fff';
       for (const key of savedKeys) {const option=document.createElement('option');option.value=key;option.textContent=calendarWeekRange(key);option.selected=key===activeWeekStart;select.appendChild(option);}
       select.onchange=()=>selectCalendarWeek(select.value);row.appendChild(select);
     }
-    host.appendChild(row);
+    disclosure.appendChild(row);
   }
 }
 function calendarSyncFields() {

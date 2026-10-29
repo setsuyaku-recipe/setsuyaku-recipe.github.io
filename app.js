@@ -2531,7 +2531,7 @@ function updateSummaryBadge() {
   const target = state.targetBudget;
   const diff = weeklyTotalCost - target;
   const status=document.getElementById('weekly-estimate-status');
-  if(status){status.hidden=!state.weeklyPlan;status.dataset.overBudget=String(diff>0);status.textContent=`夕食7日分の献立目安 約${weeklyTotalCost.toLocaleString()}円（${diff>0 ? '予算を'+diff.toLocaleString()+'円超過' : '予算内'}）`;}
+  if(status){status.hidden=!state.weeklyPlan;status.dataset.overBudget=String(diff>0);status.textContent=`${state.servings}人分・週の目安 約${weeklyTotalCost.toLocaleString()}円${diff>0 ? '（予算を'+diff.toLocaleString()+'円超過）' : ''}`;}
   const balance = document.getElementById('budget-balance');
   if (balance) balance.textContent = `${diff > 0 ? '選択した週の予算超過' : '週予算と献立目安の差額'} ¥${Math.abs(diff).toLocaleString()}`;
   const estimate = document.getElementById('budget-estimate');

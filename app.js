@@ -944,6 +944,7 @@ function setupEventListeners() {
     button.addEventListener('click', (e) => {
       if (button.getAttribute('aria-disabled') === 'true') return;
       const target = e.currentTarget.getAttribute('data-tab-target');
+      if(target==='shopping'){setAppScreen('shopping');return;}
       state.activeTab = target;
       renderTabs();
       renderActiveTab(false);
@@ -2461,6 +2462,7 @@ function render(force = false) {
   updatePreferenceBadge();
   updateCoreFlowSummary();
   renderActiveTab(force);
+  if(state.activeTab==='shopping')renderShoppingDaySelector();
   safeCreateIcons();
 }
 
@@ -3421,64 +3423,94 @@ window.setShoppingDays = function(ids) {
   if(state.familySyncCode)pushSyncDataDebounced();
 };
 let shoppingDaysDraft=null;
+let shoppingFlowStep='days';
+let shoppingChosenWeek='';
 function shoppingMenuDate(index) {
-  const date=new Date(activeWeekStart+'T12:00:00');
+  const date=new Date((shoppingChosenWeek||activeWeekStart)+'T12:00:00');
   date.setDate(date.getDate()+index);
   return (date.getMonth()+1)+'/'+date.getDate();
 }
 window.beginShoppingDayEdit=function() {
-  const panel=document.getElementById('shopping-days-panel');
-  if(!panel?.open){shoppingDaysDraft=null;return;}
+  shoppingFlowStep='days';
+  shoppingChosenWeek=activeWeekStart;
   shoppingDaysDraft=[...state.shoppingDays];
-  renderShoppingDayChoices();
+  state.renderedTabs.shopping=false;
+  render(true);
+};
+window.chooseShoppingWeek=function(offset) {
+  const key=shiftWeek(mondayKey(),offset);
+  shoppingChosenWeek=key;
+  if(calendarWeeks[key]?.weeklyPlan) {
+    window.selectCalendarWeek(key);
+    shoppingDaysDraft=[...state.shoppingDays];
+  } else shoppingDaysDraft=[];
+  renderShoppingDaySelector();
+};
+window.createShoppingWeek=function() {
+  const key=shoppingChosenWeek;
+  if(key===activeWeekStart && !state.weeklyPlan)generateRandomWeeklyPlan(false);
+  else window.selectCalendarWeek(key);
+  if(activeWeekStart!==key || !state.weeklyPlan) {
+    const notice=document.getElementById('shopping-week-missing');
+    if(notice)notice.textContent='この条件では献立を作れませんでした。献立画面で予算・苦手食材の設定をご確認ください。';
+    return;
+  }
+  shoppingDaysDraft=[...state.shoppingDays];
+  renderShoppingDaySelector();
 };
 window.editShoppingDay=function(dayId,checked) {
   if(!shoppingDaysDraft)shoppingDaysDraft=[...state.shoppingDays];
   shoppingDaysDraft=DAYS_OF_WEEK.map(d=>d.id).filter(id=>id===dayId ? checked : shoppingDaysDraft.includes(id));
   updateShoppingDayDecision();
 };
-window.selectAllShoppingDraft=function() {
-  shoppingDaysDraft=DAYS_OF_WEEK.map(day=>day.id);
-  renderShoppingDayChoices();
-};
-window.clearShoppingDraft=function() {
-  shoppingDaysDraft=[];
-  renderShoppingDayChoices();
-};
+window.selectAllShoppingDraft=function(){shoppingDaysDraft=DAYS_OF_WEEK.map(d=>d.id);renderShoppingDayChoices();};
+window.clearShoppingDraft=function(){shoppingDaysDraft=[];renderShoppingDayChoices();};
 function updateShoppingDayDecision() {
-  const button=document.getElementById('shopping-days-confirm');
   const count=(shoppingDaysDraft||state.shoppingDays).length;
-  if(button){button.disabled=!count;button.textContent=count ? 'この'+count+'日分で決定' : '曜日を選んでください';}
+  const button=document.getElementById('shopping-days-confirm');
+  if(button){button.disabled=!count;button.textContent=count ? 'この'+count+'日分の買い物リストを見る' : '買う曜日を選んでください';}
 }
 window.confirmShoppingDays=function() {
-  if(!shoppingDaysDraft?.length)return;
+  if(!shoppingDaysDraft?.length || shoppingChosenWeek!==activeWeekStart)return;
   const selected=[...shoppingDaysDraft];
-  shoppingDaysDraft=null;
+  shoppingFlowStep='list';
   window.setShoppingDays(selected);
-  const panel=document.getElementById('shopping-days-panel');
-  if(panel){panel.open=false;panel.querySelector('summary')?.focus({preventScroll:true});}
+  render(true);
+  window.scrollTo(0,0);
+  document.getElementById('ud-page-title')?.focus({preventScroll:true});
 };
 function renderShoppingDayChoices() {
   const host=document.getElementById('shopping-day-buttons');
   if(!host)return;
   const selected=shoppingDaysDraft||state.shoppingDays;
+  const record=calendarWeeks[shoppingChosenWeek];
+  const plan=shoppingChosenWeek===activeWeekStart ? state.weeklyPlan : record?.weeklyPlan;
   host.innerHTML=DAYS_OF_WEEK.map((day,index)=>{
-    const plan=state.weeklyPlan?.[day.id];
-    const main=getRecipeById(plan?.main);
-    const mainTitle=main ? getCleanTitle(main) : '献立がありません';
-    const details=['side','soup'].map((category)=>{const recipe=getRecipeById(plan?.[category]);return '<p>'+({side:'副菜',soup:'汁物'}[category])+'：'+escapeUiText(recipe ? getCleanTitle(recipe) : '未設定')+'</p>';}).join('');
-    return `<div class="shopping-day-choice"><label><input type="checkbox" ${selected.includes(day.id)?'checked':''} onchange="editShoppingDay('${day.id}',this.checked)" aria-label="${day.name}を買い物に入れる"><span>${escapeUiText(day.name.replace('曜日',''))}<small>${shoppingMenuDate(index)}</small></span></label><details><summary>${escapeUiText(mainTitle)}</summary><div class="shopping-day-dishes">${details}</div></details></div>`;
+    const data=plan?.[day.id];
+    const title=getCleanTitle(getRecipeById(data?.main))||'献立がありません';
+    const dishes=['side','soup'].map(cat=>'<p>'+({side:'副菜',soup:'汁物'}[cat])+'：'+escapeUiText(getCleanTitle(getRecipeById(data?.[cat]))||'未設定')+'</p>').join('');
+    return `<div class="shopping-pick-row"><label class="shopping-pick-label"><input type="checkbox" ${selected.includes(day.id)?'checked':''} onchange="editShoppingDay('${day.id}',this.checked)"><span class="shopping-pick-date">${shoppingMenuDate(index)}（${escapeUiText(day.name.replace('曜日',''))}）</span><strong>${escapeUiText(title)}</strong></label><details class="shopping-pick-dishes"><summary>献立を見る</summary>${dishes}</details></div>`;
   }).join('');
   updateShoppingDayDecision();
 }
 function renderShoppingDaySelector() {
+  if(!shoppingChosenWeek)shoppingChosenWeek=activeWeekStart;
+  document.body.dataset.shoppingStep=shoppingFlowStep;
   const summary=document.getElementById('shopping-days-summary');
-  if(summary)summary.textContent=selectedShoppingDaysLabel();
-  const panel=document.getElementById('shopping-days-panel');
-  if(!panel)return;
-  shoppingDaysDraft=[...state.shoppingDays];
+  if(summary)summary.textContent=calendarWeekLabel()+'・'+(state.shoppingDays.length===7?'7日分':selectedShoppingDaysLabel());
+  const title=document.getElementById('ud-page-title');
+  if(title && state.activeTab==='shopping')title.textContent=shoppingFlowStep==='days'?'買う日を選ぶ':'買い物リスト';
+  const range=document.getElementById('shopping-week-range');
+  if(range)range.textContent=calendarWeekRange(shoppingChosenWeek);
+  for(const offset of [0,1]) {
+    const button=document.getElementById('shopping-week-'+offset);
+    if(button)button.setAttribute('aria-pressed',String(shoppingChosenWeek===shiftWeek(mondayKey(),offset)));
+  }
+  const hasPlan=shoppingChosenWeek===activeWeekStart ? !!state.weeklyPlan : !!calendarWeeks[shoppingChosenWeek]?.weeklyPlan;
+  for(const id of ['shopping-day-buttons','shopping-days-footer']){const el=document.getElementById(id);if(el)el.hidden=!hasPlan;}
+  const missing=document.getElementById('shopping-week-empty');if(missing)missing.hidden=hasPlan;
+  const notice=document.getElementById('shopping-week-missing');if(notice)notice.textContent=calendarWeekLabel(shoppingChosenWeek)+'の献立がまだありません。';
   renderShoppingDayChoices();
-  if(!state.shoppingDays.length)panel.open=true;
 }
 
 function renderShoppingList() {
@@ -5208,7 +5240,7 @@ function syncAppScreen() {
   document.getElementById('ud-settings').hidden = screen !== 'settings';
   document.getElementById('ud-meal-context').hidden = screen !== 'weekly';
   document.getElementById('ud-condition').textContent = `${state.servings}人分・週${Number(state.targetBudget).toLocaleString()}円`;
-  const emptyShopping = screen === 'shopping' && !state.weeklyPlan;
+  const emptyShopping = false;
   document.getElementById('ud-shopping-empty').hidden = !emptyShopping;
   document.querySelector('main').hidden = ['home','dislikes','sharing'].includes(screen);
 }
@@ -5216,16 +5248,16 @@ function setAppScreen(screen, push = true) {
   if(state.activeTab==='dislikes' && screen!=='dislikes') discardPreferenceDraft();
   if (!['home','weekly','shopping','recipes','setup','dislikes','sharing','settings'].includes(screen)) screen = 'home';
   const changed = state.activeTab !== screen;
-  if(changed && screen==='shopping') {
-    const panel=document.getElementById('shopping-days-panel');
-    if(panel)panel.open=false;
-    shoppingDaysDraft=null;
+  if(screen==='shopping') {
+    shoppingFlowStep='days';
+    shoppingChosenWeek=activeWeekStart;
+    shoppingDaysDraft=[...state.shoppingDays];
     state.renderedTabs.shopping=false;
   }
   state.activeTab = screen;
   if (changed && push) history.pushState({udScreen:screen},'',location.pathname+location.search);
   render();
-  if (screen === 'shopping' && !state.weeklyPlan) document.getElementById('panel-shopping').hidden = true;
+
   if (changed) { window.scrollTo(0,0); document.getElementById(screen==='home'?'ud-home-title':'ud-page-title').focus({preventScroll:true}); }
 }
 window.setAppScreen = setAppScreen;

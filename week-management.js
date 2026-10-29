@@ -93,7 +93,7 @@ window.selectCalendarWeek = function(key) {
 function renderCalendarWeekControls() {
   if (!calendarWeeksReady) return;
   for (const host of document.querySelectorAll('[data-calendar-week-controls]')) {
-    host.hidden=!['weekly','shopping','recipes'].includes(state.activeTab);
+    host.hidden=!['weekly','recipes'].includes(state.activeTab);
     host.replaceChildren();
     const range=document.createElement('p'); range.textContent=`${calendarWeekLabel()}：${calendarWeekRange()}`; range.style.fontWeight='800'; host.appendChild(range);
     const row=document.createElement('div'); row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-top:8px';
